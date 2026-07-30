@@ -1,0 +1,31 @@
+import { CanActivate, ExecutionContext, ForbiddenException, Injectable } from "@nestjs/common";
+import { Reflector } from "@nestjs/core";
+import { PERMISSION_KEY, type PermissionRequirement } from "middleware/permission.decorator";
+import { RoleService } from "modules/role/role.service";
+import type { UserRole } from "models/users";
+
+@Injectable()
+export class PermissionGuard implements CanActivate {
+  constructor(
+    private readonly reflector: Reflector,
+    private readonly roleService: RoleService
+  ) {}
+
+  async canActivate(context: ExecutionContext): Promise<boolean> {
+    const requirement = this.reflector.getAllAndOverride<PermissionRequirement>(PERMISSION_KEY, [
+      context.getHandler(),
+      context.getClass()
+    ]);
+
+    if (!requirement) return true;
+
+    const request = context.switchToHttp().getRequest();
+    const role = request.user?.role?.toUpperCase() as UserRole | undefined;
+    if (!role) throw new ForbiddenException("User role is required");
+
+    const allowed = await this.roleService.userRoleCan(role, requirement);
+    if (!allowed) throw new ForbiddenException("You do not have permission to perform this action");
+
+    return true;
+  }
+}
