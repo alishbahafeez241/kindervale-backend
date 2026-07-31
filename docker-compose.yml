@@ -1,0 +1,16 @@
+services:
+  postgres:
+    image: postgres:17-alpine
+    container_name: kindervale-postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: kindervale
+    ports:
+      - "5432:5432"
+    volumes:
+      - kindervale-postgres-data:/var/lib/postgresql/data
+
+volumes:
+  kindervale-postgres-data:
