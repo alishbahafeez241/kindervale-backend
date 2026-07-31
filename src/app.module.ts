@@ -2,6 +2,7 @@ import { Module, NestModule, MiddlewareConsumer } from "@nestjs/common";
 import { ConfigModule } from "@nestjs/config";
 import { APP_GUARD } from "@nestjs/core";
 import { ThrottlerGuard, ThrottlerModule } from "@nestjs/throttler";
+import { join } from "node:path";
 import { LoggerMiddleware } from "middleware/logger.middleware";
 import { AdminModule } from "modules/admin/admin.module";
 import { AttendanceModule } from "modules/attendance/attendance.module";
@@ -27,7 +28,7 @@ import { UserModule } from "modules/user/user.module";
     }),
     ConfigModule.forRoot({
       isGlobal: true,
-      envFilePath: ".env"
+      envFilePath: [join(process.cwd(), ".env"), join(process.cwd(), "..", ".env")]
     }),
     DatabaseModule,
     JWTModule,
