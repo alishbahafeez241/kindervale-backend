@@ -5,10 +5,7 @@
   "private": true,
   "license": "UNLICENSED",
   "scripts": {
-    "db:generate": "pnpm drizzle-kit generate",
-    "db:push": "pnpm drizzle-kit push",
     "db:seed-admin": "node -r ts-node/register -r tsconfig-paths/register scripts/seed-admin.ts",
-    "studio": "pnpm drizzle-kit studio",
     "test": "jest",
     "test:watch": "jest --watch",
     "test:e2e": "jest --config ./test/e2e.json",
@@ -17,7 +14,7 @@
     "format": "prettier --write \"src/**/*.ts\"",
     "debug": "nest start --debug --watch",
     "dev": "nest start --watch",
-    "build": "pnpm install && pnpm drizzle-kit generate && nest build",
+    "build": "nest build",
     "start": "node dist/src/main"
   },
   "dependencies": {
@@ -55,7 +52,6 @@
     "@types/node": "^22.10.7",
     "@types/pg": "^8.18.0",
     "@types/supertest": "^6.0.2",
-    "drizzle-kit": "^0.31.9",
     "eslint": "^9.18.0",
     "eslint-config-prettier": "^10.1.8",
     "eslint-plugin-import": "^2.32.0",

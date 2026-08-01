@@ -4,9 +4,6 @@
 # Dependency Directories
 node_modules
 
-# Drizzle
-drizzle
-
 # Environment Variable Files
 .env
 .env.*
