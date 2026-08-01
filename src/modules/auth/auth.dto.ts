@@ -1,7 +1,7 @@
 import { IsEmail, IsIn, IsOptional, IsString, Length, MinLength } from "class-validator";
 import { Trim } from "common/transformer";
 
-export const portalRoles = ["admin", "principal", "teacher", "parent", "student"] as const;
+export const portalRoles = ["admin", "daycareadmin", "principal", "teacher", "parent"] as const;
 export type PortalRole = (typeof portalRoles)[number];
 
 export class LoginDto {

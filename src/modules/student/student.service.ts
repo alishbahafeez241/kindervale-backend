@@ -92,7 +92,6 @@ export class StudentService {
     if (userId) {
       const [user] = await this.databaseService.db.select().from(usersTable).where(eq(usersTable.id, userId)).limit(1);
       if (!user) throw new NotFoundException("User not found");
-      if (user.role !== "STUDENT") throw new ConflictException("Linked user role must be STUDENT");
     }
 
     if (parentId) {

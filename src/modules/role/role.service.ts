@@ -38,6 +38,10 @@ const defaultRoleAccess: Record<UserRole, Partial<Record<(typeof defaultModules)
     (typeof defaultModules)[number],
     PermissionAction[]
   >,
+  DAYCAREADMIN: Object.fromEntries(defaultModules.map((module) => [module, ["MANAGE"]])) as Record<
+    (typeof defaultModules)[number],
+    PermissionAction[]
+  >,
   PRINCIPAL: {
     dashboard: ["READ"],
     students: ["READ"],
@@ -78,15 +82,6 @@ const defaultRoleAccess: Record<UserRole, Partial<Record<(typeof defaultModules)
     calendar: ["READ"],
     documents: ["READ"]
   },
-  STUDENT: {
-    dashboard: ["READ"],
-    attendance: ["READ"],
-    homework: ["READ"],
-    fees: ["READ"],
-    notices: ["READ"],
-    calendar: ["READ"],
-    documents: ["READ"]
-  }
 };
 
 @Injectable()
@@ -206,7 +201,7 @@ export class RoleService {
   }
 
   async userRoleCan(roleName: UserRole, requirement: PermissionCheckDto): Promise<boolean> {
-    if (roleName === "ADMIN") return true;
+    if (roleName === "ADMIN" || roleName === "DAYCAREADMIN") return true;
 
     const [permission] = await this.databaseService.db
       .select({ id: permissionsTable.id })
