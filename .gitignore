@@ -17,3 +17,5 @@ uploads
 
 # Developer Directories
 .Extras
+.postman/
+postman/
