@@ -5,6 +5,8 @@ import usersTable from "models/users";
 import { DatabaseService } from "modules/database/database.service";
 import type { CreateAdminDto, UpdateAdminDto } from "modules/admin/admin.dto";
 
+const adminProfileRoles = ["ADMIN", "DAYCAREADMIN", "PRINCIPAL"] as const;
+
 @Injectable()
 export class AdminService {
   constructor(private readonly databaseService: DatabaseService) {}
@@ -16,8 +18,8 @@ export class AdminService {
       throw new NotFoundException("User not found");
     }
 
-    if (user.role !== "ADMIN") {
-      throw new ConflictException("User role must be ADMIN");
+    if (!adminProfileRoles.includes(user.role as (typeof adminProfileRoles)[number])) {
+      throw new ConflictException(`User role must be one of: ${adminProfileRoles.join(", ")}`);
     }
 
     const [admin] = await this.databaseService.db.insert(adminsTable).values(dto).returning();
