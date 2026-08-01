@@ -1,6 +1,6 @@
 import { randomInt } from "node:crypto";
 import { Injectable, NotFoundException, UnauthorizedException } from "@nestjs/common";
-import { and, desc, eq, gt, isNull } from "drizzle-orm";
+import { and, desc, eq, gt, ilike, isNull, or } from "drizzle-orm";
 import { passwordResetTokensTable, refreshTokensTable } from "models/auth";
 import adminsTable from "models/admins";
 import { parentsTable, studentsTable } from "models/school";
@@ -30,11 +30,16 @@ export class AuthService {
   ) {}
 
   async login(dto: LoginDto) {
+    const expectedLoginOtp = process.env.LOGIN_OTP ?? "0000";
+    if (dto.otp !== expectedLoginOtp) {
+      throw new UnauthorizedException("Invalid username, password, OTP, or role.");
+    }
+
     if (process.env.DEV_AUTH_BYPASS === "true") {
       const tokenPayload = {
         userId: "dev-admin",
         name: "Admin User",
-        email: dto.email,
+        email: dto.email ?? `${dto.username}@example.com`,
         role: dto.role
       };
 
@@ -53,19 +58,20 @@ export class AuthService {
     }
 
     const role = dto.role.toUpperCase() as UserRole;
+    const loginId = (dto.email ?? dto.username ?? "").trim();
     const [user] = await this.databaseService.db
       .select()
       .from(usersTable)
-      .where(eq(usersTable.email, dto.email))
+      .where(or(eq(usersTable.email, loginId), ilike(usersTable.email, `${loginId}@%`)))
       .limit(1);
 
     if (!user || user.role !== role || user.status !== "ACTIVE") {
-      throw new UnauthorizedException("Invalid email, password, or role.");
+      throw new UnauthorizedException("Invalid username, password, OTP, or role.");
     }
 
     const isPasswordValid = await this.hashService.compare(dto.password, user.password);
     if (!isPasswordValid) {
-      throw new UnauthorizedException("Invalid email, password, or role.");
+      throw new UnauthorizedException("Invalid username, password, OTP, or role.");
     }
 
     const tokenPayload = {

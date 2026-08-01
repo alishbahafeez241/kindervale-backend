@@ -1,17 +1,27 @@
-import { IsEmail, IsIn, IsOptional, IsString, Length, MinLength } from "class-validator";
+import { IsEmail, IsIn, IsOptional, IsString, Length, MinLength, ValidateIf } from "class-validator";
 import { Trim } from "common/transformer";
 
 export const portalRoles = ["admin", "daycareadmin", "principal", "teacher", "parent"] as const;
 export type PortalRole = (typeof portalRoles)[number];
 
 export class LoginDto {
+  @ValidateIf((dto: LoginDto) => !dto.username)
   @IsEmail({}, { message: "Email must be valid" })
   @Trim()
-  email: string;
+  email?: string;
+
+  @ValidateIf((dto: LoginDto) => !dto.email)
+  @IsString({ message: "Username must be a string" })
+  @Trim()
+  username?: string;
 
   @IsString({ message: "Password must be a string" })
   @MinLength(6, { message: "Password must be at least 6 characters" })
   password: string;
+
+  @IsString({ message: "OTP must be a string" })
+  @Length(4, 6, { message: "OTP must be 4 to 6 digits" })
+  otp: string;
 
   @IsIn(portalRoles, { message: `Role must be one of: ${portalRoles.join(", ")}` })
   role: PortalRole;
