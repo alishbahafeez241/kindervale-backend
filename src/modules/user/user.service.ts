@@ -16,13 +16,16 @@ export class UserService {
     const { password: _, ...safeColumns } = getTableColumns(usersTable);
 
     const [existingUser] = await this.databaseService.db
-      .select({ id: usersTable.id })
+      .select({ email: usersTable.email, username: usersTable.username })
       .from(usersTable)
-      .where(eq(usersTable.email, dto.email))
+      .where(or(eq(usersTable.email, dto.email), eq(usersTable.username, dto.username)))
       .limit(1);
 
-    if (existingUser) {
+    if (existingUser?.email === dto.email) {
       throw new ConflictException("Email already exists");
+    }
+    if (existingUser?.username === dto.username) {
+      throw new ConflictException("Username already exists");
     }
 
     const [user] = await this.databaseService.db
@@ -83,15 +86,26 @@ export class UserService {
 
   async updateUser(userId: string, dto: UpdateUserDto): Promise<SafeUser> {
     const { password: _, ...safeColumns } = getTableColumns(usersTable);
-    if (dto.email) {
+    if (dto.email || dto.username) {
       const [existingUser] = await this.databaseService.db
-        .select({ id: usersTable.id })
+        .select({ email: usersTable.email, username: usersTable.username })
         .from(usersTable)
-        .where(and(eq(usersTable.email, dto.email), ne(usersTable.id, userId)))
+        .where(
+          and(
+            or(
+              dto.email ? eq(usersTable.email, dto.email) : undefined,
+              dto.username ? eq(usersTable.username, dto.username) : undefined
+            ),
+            ne(usersTable.id, userId)
+          )
+        )
         .limit(1);
 
-      if (existingUser) {
+      if (dto.email && existingUser?.email === dto.email) {
         throw new ConflictException("Email already exists");
+      }
+      if (dto.username && existingUser?.username === dto.username) {
+        throw new ConflictException("Username already exists");
       }
     }
 
@@ -134,7 +148,11 @@ export class UserService {
     if (query.role) conditions.push(eq(usersTable.role, query.role));
     if (query.status) conditions.push(eq(usersTable.status, query.status));
     if (query.search) {
-      const searchCondition = or(ilike(usersTable.name, `%${query.search}%`), ilike(usersTable.email, `%${query.search}%`));
+      const searchCondition = or(
+        ilike(usersTable.name, `%${query.search}%`),
+        ilike(usersTable.username, `%${query.search}%`),
+        ilike(usersTable.email, `%${query.search}%`)
+      );
       if (searchCondition) conditions.push(searchCondition);
     }
 

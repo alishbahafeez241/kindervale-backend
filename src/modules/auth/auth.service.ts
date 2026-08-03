@@ -1,5 +1,6 @@
 import { randomInt } from "node:crypto";
 import { Injectable, NotFoundException, UnauthorizedException } from "@nestjs/common";
+import { normalizePortalRole } from "common/role-normalizer";
 import { and, desc, eq, gt, ilike, isNull, or } from "drizzle-orm";
 import { passwordResetTokensTable, refreshTokensTable } from "models/auth";
 import adminsTable from "models/admins";
@@ -17,8 +18,7 @@ import {
   LogoutDto,
   PortalRole,
   RefreshTokenDto,
-  ResetPasswordDto,
-  normalizePortalRole
+  ResetPasswordDto
 } from "modules/auth/auth.dto";
 
 const portalRoleToUserRole: Record<PortalRole, UserRole> = {
@@ -64,6 +64,7 @@ export class AuthService {
         userId: "dev-admin",
         name: "Admin User",
         email: dto.email ?? `${dto.username}@example.com`,
+        username: dto.username ?? dto.email?.split("@")[0],
         role
       };
 
@@ -74,7 +75,7 @@ export class AuthService {
           refreshToken: this.jwtService.generateRefreshToken(tokenPayload),
           user: {
             id: tokenPayload.userId,
-            username: dto.username ?? tokenPayload.email.split("@")[0],
+            username: tokenPayload.username,
             name: tokenPayload.name,
             email: tokenPayload.email,
             role,
@@ -89,7 +90,7 @@ export class AuthService {
     const [user] = await this.databaseService.db
       .select()
       .from(usersTable)
-      .where(or(eq(usersTable.email, loginId), ilike(usersTable.email, `${loginId}@%`)))
+      .where(or(eq(usersTable.email, loginId), eq(usersTable.username, loginId)))
       .limit(1);
 
     console.log("[auth.login] User found:", Boolean(user));
@@ -98,7 +99,7 @@ export class AuthService {
     }
 
     console.log("[auth.login] Stored role:", user.role);
-    console.log("[auth.login] Stored username:", user.email.split("@")[0]);
+    console.log("[auth.login] Stored username:", user.username);
     if (user.role !== expectedUserRole) {
       throw new UnauthorizedException("Role mismatch");
     }
@@ -132,7 +133,7 @@ export class AuthService {
         refreshToken,
         user: {
           ...portalUser,
-          username: user.email.split("@")[0]
+          username: user.username
         }
       }
     };
@@ -221,7 +222,7 @@ export class AuthService {
     const [user] = await this.databaseService.db
       .select()
       .from(usersTable)
-      .where(and(eq(usersTable.email, email), ilike(usersTable.email, `${username}@%`)))
+      .where(and(eq(usersTable.email, email), eq(usersTable.username, username)))
       .limit(1);
 
     if (user?.status === "ACTIVE") {
@@ -249,7 +250,7 @@ export class AuthService {
     const [user] = await this.databaseService.db
       .select()
       .from(usersTable)
-      .where(or(eq(usersTable.email, loginId), ilike(usersTable.email, `${loginId}@%`)))
+      .where(or(eq(usersTable.email, loginId), eq(usersTable.username, loginId)))
       .limit(1);
 
     if (!user || user.status !== "ACTIVE") {
@@ -333,6 +334,7 @@ export class AuthService {
       .select({
         id: usersTable.id,
         name: usersTable.name,
+        username: usersTable.username,
         email: usersTable.email,
         role: usersTable.role,
         status: usersTable.status,

@@ -12,6 +12,7 @@ import usersTable from "models/users";
 const seedUsers = [
   {
     email: process.env.SEED_ADMIN_EMAIL ?? "admin@example.com",
+    username: process.env.SEED_ADMIN_USERNAME ?? "admin",
     password: process.env.SEED_ADMIN_PASSWORD ?? "demo123",
     name: process.env.SEED_ADMIN_NAME ?? "Admin User",
     role: "ADMIN",
@@ -19,6 +20,7 @@ const seedUsers = [
   },
   {
     email: process.env.SEED_DAYCARE_ADMIN_EMAIL ?? "daycareadmin@example.com",
+    username: process.env.SEED_DAYCARE_ADMIN_USERNAME ?? "daycareadmin",
     password: process.env.SEED_DAYCARE_ADMIN_PASSWORD ?? "demo123",
     name: process.env.SEED_DAYCARE_ADMIN_NAME ?? "Daycare Admin",
     role: "DAYCAREADMIN",
@@ -26,6 +28,7 @@ const seedUsers = [
   },
   {
     email: process.env.SEED_PRINCIPAL_EMAIL ?? "principal@example.com",
+    username: process.env.SEED_PRINCIPAL_USERNAME ?? "principal",
     password: process.env.SEED_PRINCIPAL_PASSWORD ?? "demo123",
     name: process.env.SEED_PRINCIPAL_NAME ?? "Principal User",
     role: "PRINCIPAL",
@@ -33,6 +36,7 @@ const seedUsers = [
   },
   {
     email: process.env.SEED_TEACHER_EMAIL ?? "teacher@example.com",
+    username: process.env.SEED_TEACHER_USERNAME ?? "teacher",
     password: process.env.SEED_TEACHER_PASSWORD ?? "demo123",
     name: process.env.SEED_TEACHER_NAME ?? "Teacher User",
     role: "TEACHER",
@@ -41,6 +45,7 @@ const seedUsers = [
   },
   {
     email: process.env.SEED_PARENT_EMAIL ?? "parent@example.com",
+    username: process.env.SEED_PARENT_USERNAME ?? "parent",
     password: process.env.SEED_PARENT_PASSWORD ?? "demo123",
     name: process.env.SEED_PARENT_NAME ?? "Parent User",
     role: "PARENT",
@@ -66,6 +71,7 @@ async function main() {
             .update(usersTable)
             .set({
               name: seedUser.name,
+              username: seedUser.username,
               password: passwordHash,
               role: seedUser.role,
               status: "ACTIVE",
@@ -78,6 +84,7 @@ async function main() {
             .values({
               id: createId(),
               name: seedUser.name,
+              username: seedUser.username,
               email: seedUser.email,
               password: passwordHash,
               role: seedUser.role,
@@ -136,7 +143,7 @@ async function main() {
         }
       }
 
-      console.log(`Seeded ${seedUser.role} login: ${seedUser.email.split("@")[0]} / ${seedUser.password} / OTP 0000`);
+      console.log(`Seeded ${seedUser.role} login: ${seedUser.username} / ${seedUser.password} / OTP 0000`);
     }
   } finally {
     await pool.end();

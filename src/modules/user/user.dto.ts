@@ -1,5 +1,6 @@
-import { Type } from "class-transformer";
+import { Transform, Type } from "class-transformer";
 import { IsEmail, IsEnum, IsIn, IsInt, IsOptional, IsString, Matches, Max, Min, MinLength } from "class-validator";
+import { normalizeUserRole } from "common/role-normalizer";
 import { Trim } from "common/transformer";
 import { userRoleEnum, userStatusEnum, type UserRole, type UserStatus } from "models/users";
 
@@ -9,6 +10,11 @@ export class CreateUserDto {
   @Trim()
   name: string;
 
+  @IsString({ message: "Username must be a string" })
+  @Matches(/^[a-zA-Z0-9._-]+$/, { message: "Username can only contain letters, numbers, dots, underscores, and hyphens" })
+  @Trim()
+  username: string;
+
   @IsEmail({}, { message: "Email must be valid" })
   @Trim()
   email: string;
@@ -17,6 +23,7 @@ export class CreateUserDto {
   @MinLength(6, { message: "Password must be at least 6 characters" })
   password: string;
 
+  @Transform(({ value }) => normalizeUserRole(value))
   @IsEnum(userRoleEnum.enumValues, {
     message: `Role must be one of: ${userRoleEnum.enumValues.join(", ")}`
   })
@@ -31,6 +38,12 @@ export class UpdateUserDto {
   name?: string;
 
   @IsOptional()
+  @IsString({ message: "Username must be a string" })
+  @Matches(/^[a-zA-Z0-9._-]+$/, { message: "Username can only contain letters, numbers, dots, underscores, and hyphens" })
+  @Trim()
+  username?: string;
+
+  @IsOptional()
   @IsEmail({}, { message: "Email must be valid" })
   @Trim()
   email?: string;
@@ -41,6 +54,7 @@ export class UpdateUserDto {
   password?: string;
 
   @IsOptional()
+  @Transform(({ value }) => normalizeUserRole(value))
   @IsEnum(userRoleEnum.enumValues, {
     message: `Role must be one of: ${userRoleEnum.enumValues.join(", ")}`
   })
@@ -73,6 +87,7 @@ export class UserListQueryDto {
   search?: string;
 
   @IsOptional()
+  @Transform(({ value }) => normalizeUserRole(value))
   @IsEnum(userRoleEnum.enumValues, {
     message: `Role must be one of: ${userRoleEnum.enumValues.join(", ")}`
   })
@@ -85,10 +100,10 @@ export class UserListQueryDto {
   status?: UserStatus;
 
   @IsOptional()
-  @IsIn(["name", "email", "role", "status", "createdAt"], {
-    message: "Sort by must be one of: name, email, role, status, createdAt"
+  @IsIn(["name", "username", "email", "role", "status", "createdAt"], {
+    message: "Sort by must be one of: name, username, email, role, status, createdAt"
   })
-  sortBy?: "name" | "email" | "role" | "status" | "createdAt" = "createdAt";
+  sortBy?: "name" | "username" | "email" | "role" | "status" | "createdAt" = "createdAt";
 
   @IsOptional()
   @IsIn(["asc", "desc"], { message: "Sort order must be asc or desc" })

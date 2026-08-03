@@ -10,6 +10,7 @@ export type UserStatus = (typeof userStatusEnum.enumValues)[number];
 const usersTable = pgTable("users", {
   id: cuid().primaryKey(),
   name: text().notNull(),
+  username: text().notNull().unique(),
   email: text().notNull().unique(),
   password: text().notNull(),
   role: userRoleEnum().notNull(),
