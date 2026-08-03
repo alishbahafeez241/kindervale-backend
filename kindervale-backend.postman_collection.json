@@ -8,6 +8,7 @@
     { "key": "baseUrl", "value": "http://localhost:5000/api" },
     { "key": "accessToken", "value": "" },
     { "key": "refreshToken", "value": "" },
+    { "key": "authUserId", "value": "" },
     { "key": "userId", "value": "" },
     { "key": "teacherUserId", "value": "" },
     { "key": "adminId", "value": "" },
@@ -63,7 +64,7 @@
           "    const data = json.data || {};",
           "    if (data.accessToken) pm.collectionVariables.set('accessToken', data.accessToken);",
           "    if (data.refreshToken) pm.collectionVariables.set('refreshToken', data.refreshToken);",
-          "    if (data.user?.id) pm.collectionVariables.set('userId', data.user.id);",
+          "    if (data.user?.id) pm.collectionVariables.set('authUserId', data.user.id);",
           "  });",
           "}"
         ]
@@ -74,7 +75,7 @@
     {
       "name": "Auth",
       "item": [
-        { "name": "Login", "event": [{ "listen": "test", "script": { "type": "text/javascript", "exec": ["const json = pm.response.json();", "const data = json.data || {};", "if (data.accessToken) pm.collectionVariables.set('accessToken', data.accessToken);", "if (data.refreshToken) pm.collectionVariables.set('refreshToken', data.refreshToken);", "if (data.user?.id) pm.collectionVariables.set('userId', data.user.id);"] } }], "request": { "method": "POST", "header": [{ "key": "Content-Type", "value": "application/json" }], "body": { "mode": "raw", "raw": "{\n  \"role\": \"daycare_admin\",\n  \"username\": \"daycareadmin\",\n  \"password\": \"demo123\",\n  \"otp\": \"0000\"\n}" }, "url": "{{baseUrl}}/auth/login" } },
+        { "name": "Login", "event": [{ "listen": "test", "script": { "type": "text/javascript", "exec": ["const json = pm.response.json();", "const data = json.data || {};", "if (data.accessToken) pm.collectionVariables.set('accessToken', data.accessToken);", "if (data.refreshToken) pm.collectionVariables.set('refreshToken', data.refreshToken);", "if (data.user?.id) pm.collectionVariables.set('authUserId', data.user.id);"] } }], "request": { "method": "POST", "header": [{ "key": "Content-Type", "value": "application/json" }], "body": { "mode": "raw", "raw": "{\n  \"role\": \"daycare_admin\",\n  \"username\": \"daycareadmin\",\n  \"password\": \"demo123\",\n  \"otp\": \"0000\"\n}" }, "url": "{{baseUrl}}/auth/login" } },
         { "name": "Refresh Token", "event": [{ "listen": "test", "script": { "type": "text/javascript", "exec": ["const json = pm.response.json();", "const data = json.data || {};", "if (data.accessToken) pm.collectionVariables.set('accessToken', data.accessToken);", "if (data.refreshToken) pm.collectionVariables.set('refreshToken', data.refreshToken);"] } }], "request": { "method": "POST", "header": [{ "key": "Content-Type", "value": "application/json" }], "body": { "mode": "raw", "raw": "{\n  \"refreshToken\": \"{{refreshToken}}\"\n}" }, "url": "{{baseUrl}}/auth/refresh" } },
         { "name": "Logout", "request": { "method": "POST", "header": [{ "key": "Content-Type", "value": "application/json" }], "body": { "mode": "raw", "raw": "{\n  \"refreshToken\": \"{{refreshToken}}\"\n}" }, "url": "{{baseUrl}}/auth/logout" } },
         { "name": "Forgot Password", "request": { "method": "POST", "header": [{ "key": "Content-Type", "value": "application/json" }], "body": { "mode": "raw", "raw": "{\n  \"username\": \"admin\",\n  \"email\": \"admin@example.com\"\n}" }, "url": "{{baseUrl}}/auth/forgot-password" } },
@@ -88,7 +89,7 @@
       "item": [
         { "name": "Create User", "event": [{ "listen": "test", "script": { "type": "text/javascript", "exec": ["const json = pm.response.json();", "if (json.data?.id) pm.collectionVariables.set('userId', json.data.id);"] } }], "request": { "method": "POST", "header": [{ "key": "Content-Type", "value": "application/json" }], "body": { "mode": "raw", "raw": "{\n  \"name\": \"Postman Admin\",\n  \"username\": \"postman.admin.{{$timestamp}}\",\n  \"email\": \"postman.admin.{{$timestamp}}@example.com\",\n  \"password\": \"demo123\",\n  \"role\": \"ADMIN\"\n}" }, "url": "{{baseUrl}}/users" } },
         { "name": "Create Teacher User", "event": [{ "listen": "test", "script": { "type": "text/javascript", "exec": ["const json = pm.response.json();", "if (json.data?.id) pm.collectionVariables.set('teacherUserId', json.data.id);"] } }], "request": { "method": "POST", "header": [{ "key": "Content-Type", "value": "application/json" }], "body": { "mode": "raw", "raw": "{\n  \"name\": \"Postman Teacher\",\n  \"username\": \"postman.teacher.{{$timestamp}}\",\n  \"email\": \"postman.teacher.{{$timestamp}}@example.com\",\n  \"password\": \"demo123\",\n  \"role\": \"TEACHER\"\n}" }, "url": "{{baseUrl}}/users" } },
-        { "name": "List Users", "request": { "method": "GET", "url": "{{baseUrl}}/users?page=1&limit=10&sortBy=createdAt&sortOrder=desc" } },
+        { "name": "List Users", "event": [{ "listen": "test", "script": { "type": "text/javascript", "exec": ["const json = pm.response.json();", "const first = json.data?.items?.[0];", "if (first?.id && !pm.collectionVariables.get('userId')) pm.collectionVariables.set('userId', first.id);"] } }], "request": { "method": "GET", "url": "{{baseUrl}}/users?page=1&limit=10&sortBy=createdAt&sortOrder=desc" } },
         { "name": "Get User", "request": { "method": "GET", "url": "{{baseUrl}}/users/{{userId}}" } },
         { "name": "Update User", "request": { "method": "PATCH", "header": [{ "key": "Content-Type", "value": "application/json" }], "body": { "mode": "raw", "raw": "{\n  \"name\": \"Updated User\",\n  \"status\": \"ACTIVE\"\n}" }, "url": "{{baseUrl}}/users/{{userId}}" } },
         { "name": "Delete User", "request": { "method": "DELETE", "url": "{{baseUrl}}/users/{{userId}}" } },
