@@ -14,25 +14,18 @@ export interface EmailTemplate {
 @Injectable()
 export class MailService {
   private readonly logger = new Logger(MailService.name);
-  private client: BrevoClient;
-  private senderEmail: string;
-  private senderName: string;
+  private client?: BrevoClient;
+  private senderEmail = "";
+  private senderName = "Kindervale";
 
   constructor(private configService: ConfigService) {
     const apiKey = this.configService.get<string>("BREVO_API_KEY");
     const senderEmail = this.configService.get<string>("BREVO_SENDER_EMAIL");
     const senderName = this.configService.get<string>("BREVO_SENDER_NAME");
 
-    if (!apiKey) {
-      throw new Error("BREVO_API_KEY environment variable is required");
-    }
-
-    if (!senderEmail) {
-      throw new Error("BREVO_SENDER_EMAIL environment variable is required");
-    }
-
-    if (!senderName) {
-      throw new Error("BREVO_SENDER_NAME environment variable is required");
+    if (!apiKey || !senderEmail || !senderName) {
+      this.logger.warn("Brevo email config is missing; email sending is disabled for this environment");
+      return;
     }
 
     this.client = new BrevoClient({ apiKey });
@@ -41,6 +34,11 @@ export class MailService {
   }
 
   private async sendEmail(to: string, subject: string, textContent: string, htmlContent: string): Promise<void> {
+    if (!this.client) {
+      this.logger.warn(`Skipped email to ${to}: Brevo email config is missing`);
+      return;
+    }
+
     try {
       await this.client.transactionalEmails.sendTransacEmail({
         sender: {

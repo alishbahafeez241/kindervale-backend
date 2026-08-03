@@ -41,6 +41,7 @@ export default defineConfig(
       "@typescript-eslint/no-unsafe-return": "off",
       "@typescript-eslint/no-unsafe-argument": "off",
       "@typescript-eslint/no-unsafe-enum-comparison": "off",
+      "@typescript-eslint/no-redundant-type-constituents": "off",
       "prefer-const": "warn",
       "no-trailing-spaces": "warn",
       "no-var": "warn",
