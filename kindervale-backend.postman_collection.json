@@ -44,7 +44,7 @@
     {
       "name": "Auth",
       "item": [
-        { "name": "Login", "request": { "method": "POST", "header": [{ "key": "Content-Type", "value": "application/json" }], "body": { "mode": "raw", "raw": "{\n  \"role\": \"daycareadmin\",\n  \"username\": \"admin\",\n  \"password\": \"password\",\n  \"otp\": \"0000\"\n}" }, "url": "{{baseUrl}}/auth/login" } },
+        { "name": "Login", "request": { "method": "POST", "header": [{ "key": "Content-Type", "value": "application/json" }], "body": { "mode": "raw", "raw": "{\n  \"role\": \"admin\",\n  \"username\": \"admin\",\n  \"password\": \"password123\",\n  \"otp\": \"0000\"\n}" }, "url": "{{baseUrl}}/auth/login" } },
         { "name": "Refresh Token", "request": { "method": "POST", "header": [{ "key": "Content-Type", "value": "application/json" }], "body": { "mode": "raw", "raw": "{\n  \"refreshToken\": \"{{refreshToken}}\"\n}" }, "url": "{{baseUrl}}/auth/refresh" } },
         { "name": "Logout", "request": { "method": "POST", "header": [{ "key": "Content-Type", "value": "application/json" }], "body": { "mode": "raw", "raw": "{\n  \"refreshToken\": \"{{refreshToken}}\"\n}" }, "url": "{{baseUrl}}/auth/logout" } },
         { "name": "Forgot Password", "request": { "method": "POST", "header": [{ "key": "Content-Type", "value": "application/json" }], "body": { "mode": "raw", "raw": "{\n  \"email\": \"admin@example.com\"\n}" }, "url": "{{baseUrl}}/auth/forgot-password" } },
