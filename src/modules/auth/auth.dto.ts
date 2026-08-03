@@ -40,14 +40,31 @@ export class LoginDto {
 }
 
 export class RefreshTokenDto {
+  @ValidateIf((dto: RefreshTokenDto) => !dto.token && !dto.refresh_token)
   @IsString({ message: "Refresh token must be a string" })
-  refreshToken: string;
+  refreshToken?: string;
+
+  @IsOptional()
+  @IsString({ message: "Token must be a string" })
+  token?: string;
+
+  @IsOptional()
+  @IsString({ message: "Refresh token must be a string" })
+  refresh_token?: string;
 }
 
 export class LogoutDto {
   @IsOptional()
   @IsString({ message: "Refresh token must be a string" })
   refreshToken?: string;
+
+  @IsOptional()
+  @IsString({ message: "Token must be a string" })
+  token?: string;
+
+  @IsOptional()
+  @IsString({ message: "Refresh token must be a string" })
+  refresh_token?: string;
 }
 
 export class ForgotPasswordDto {
@@ -61,9 +78,15 @@ export class ForgotPasswordDto {
 }
 
 export class ResetPasswordDto {
+  @ValidateIf((dto: ResetPasswordDto) => !dto.username)
   @IsEmail({}, { message: "Email must be valid" })
   @Trim()
-  email: string;
+  email?: string;
+
+  @ValidateIf((dto: ResetPasswordDto) => !dto.email)
+  @IsString({ message: "Username must be a string" })
+  @Trim()
+  username?: string;
 
   @IsString({ message: "OTP must be a string" })
   @Length(4, 6, { message: "OTP must be 4 to 6 digits" })
@@ -72,6 +95,10 @@ export class ResetPasswordDto {
   @IsString({ message: "Password must be a string" })
   @MinLength(6, { message: "Password must be at least 6 characters" })
   newPassword: string;
+
+  @IsOptional()
+  @IsString({ message: "Confirm password must be a string" })
+  confirmNewPassword?: string;
 }
 
 export class ChangePasswordDto {
@@ -81,4 +108,8 @@ export class ChangePasswordDto {
   @IsString({ message: "New password must be a string" })
   @MinLength(6, { message: "New password must be at least 6 characters" })
   newPassword: string;
+
+  @IsOptional()
+  @IsString({ message: "Confirm password must be a string" })
+  confirmNewPassword?: string;
 }
