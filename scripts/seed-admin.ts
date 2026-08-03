@@ -7,9 +7,22 @@ import { Pool } from "pg";
 import adminsTable from "models/admins";
 import usersTable from "models/users";
 
-const email = process.env.SEED_ADMIN_EMAIL ?? "admin@example.com";
-const password = process.env.SEED_ADMIN_PASSWORD ?? "password123";
-const name = process.env.SEED_ADMIN_NAME ?? "Admin User";
+const seedUsers = [
+  {
+    email: process.env.SEED_ADMIN_EMAIL ?? "admin@example.com",
+    password: process.env.SEED_ADMIN_PASSWORD ?? "password123",
+    name: process.env.SEED_ADMIN_NAME ?? "Admin User",
+    role: "ADMIN",
+    designation: "Admin"
+  },
+  {
+    email: process.env.SEED_DAYCARE_ADMIN_EMAIL ?? "daycareadmin@example.com",
+    password: process.env.SEED_DAYCARE_ADMIN_PASSWORD ?? "demo123",
+    name: process.env.SEED_DAYCARE_ADMIN_NAME ?? "Daycare Admin",
+    role: "DAYCAREADMIN",
+    designation: "Daycare Admin"
+  }
+] as const;
 
 async function main() {
   if (!process.env.DATABASE_URL) {
@@ -20,48 +33,50 @@ async function main() {
   const db = drizzle(pool, { casing: "snake_case" });
 
   try {
-    const [existingUser] = await db.select().from(usersTable).where(eq(usersTable.email, email)).limit(1);
-    const passwordHash = await hash(password, 10);
+    for (const seedUser of seedUsers) {
+      const [existingUser] = await db.select().from(usersTable).where(eq(usersTable.email, seedUser.email)).limit(1);
+      const passwordHash = await hash(seedUser.password, 10);
 
-    const [user] = existingUser
-      ? await db
-          .update(usersTable)
-          .set({
-            name,
-            password: passwordHash,
-            role: "ADMIN",
-            status: "ACTIVE",
-            updatedAt: new Date()
-          })
-          .where(eq(usersTable.id, existingUser.id))
-          .returning()
-      : await db
-          .insert(usersTable)
-          .values({
-            id: createId(),
-            name,
-            email,
-            password: passwordHash,
-            role: "ADMIN",
-            status: "ACTIVE"
-          })
-          .returning();
+      const [user] = existingUser
+        ? await db
+            .update(usersTable)
+            .set({
+              name: seedUser.name,
+              password: passwordHash,
+              role: seedUser.role,
+              status: "ACTIVE",
+              updatedAt: new Date()
+            })
+            .where(eq(usersTable.id, existingUser.id))
+            .returning()
+        : await db
+            .insert(usersTable)
+            .values({
+              id: createId(),
+              name: seedUser.name,
+              email: seedUser.email,
+              password: passwordHash,
+              role: seedUser.role,
+              status: "ACTIVE"
+            })
+            .returning();
 
-    const [existingAdmin] = await db.select().from(adminsTable).where(eq(adminsTable.userId, user.id)).limit(1);
-    if (existingAdmin) {
-      await db
-        .update(adminsTable)
-        .set({ designation: "Admin", updatedAt: new Date() })
-        .where(eq(adminsTable.id, existingAdmin.id));
-    } else {
-      await db.insert(adminsTable).values({
-        id: createId(),
-        userId: user.id,
-        designation: "Admin"
-      });
+      const [existingAdmin] = await db.select().from(adminsTable).where(eq(adminsTable.userId, user.id)).limit(1);
+      if (existingAdmin) {
+        await db
+          .update(adminsTable)
+          .set({ designation: seedUser.designation, updatedAt: new Date() })
+          .where(eq(adminsTable.id, existingAdmin.id));
+      } else {
+        await db.insert(adminsTable).values({
+          id: createId(),
+          userId: user.id,
+          designation: seedUser.designation
+        });
+      }
+
+      console.log(`Seeded ${seedUser.role} login: ${seedUser.email} / ${seedUser.password}`);
     }
-
-    console.log(`Seeded admin login: ${email} / ${password}`);
   } finally {
     await pool.end();
   }
