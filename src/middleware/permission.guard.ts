@@ -4,6 +4,11 @@ import { PERMISSION_KEY, type PermissionRequirement } from "middleware/permissio
 import { RoleService } from "modules/role/role.service";
 import type { UserRole } from "models/users";
 
+const normalizeTokenRole = (role: string): UserRole => {
+  const normalized = role.trim().toUpperCase().replace(/[\s-]+/g, "");
+  return normalized === "DAYCAREADMIN" || normalized === "DAYCARE_ADMIN" ? "DAYCAREADMIN" : (normalized as UserRole);
+};
+
 @Injectable()
 export class PermissionGuard implements CanActivate {
   constructor(
@@ -20,7 +25,7 @@ export class PermissionGuard implements CanActivate {
     if (!requirement) return true;
 
     const request = context.switchToHttp().getRequest();
-    const role = request.user?.role?.toUpperCase() as UserRole | undefined;
+    const role = request.user?.role ? normalizeTokenRole(request.user.role) : undefined;
     if (!role) throw new ForbiddenException("User role is required");
 
     const allowed = await this.roleService.userRoleCan(role, requirement);
