@@ -52,11 +52,16 @@ export class AuthService {
     console.log("[auth.login] Received role:", dto.role);
     console.log("[auth.login] Received username:", dto.username ?? dto.email);
 
-    const expectedLoginOtp = process.env.LOGIN_OTP ?? "0000";
-    const isOtpValid = dto.otp === "0000" || dto.otp === expectedLoginOtp;
-    console.log("[auth.login] OTP comparison result:", isOtpValid);
-    if (!isOtpValid) {
-      throw new UnauthorizedException("Invalid OTP");
+    const requiresOtp = role === "admin" || role === "daycare_admin" || role === "principal";
+    if (requiresOtp) {
+      const expectedLoginOtp = process.env.LOGIN_OTP ?? "0000";
+      const isOtpValid = dto.otp === "0000" || dto.otp === expectedLoginOtp;
+      console.log("[auth.login] OTP comparison result:", isOtpValid);
+      if (!isOtpValid) {
+        throw new UnauthorizedException("Invalid OTP");
+      }
+    } else {
+      console.log("[auth.login] OTP not required for role:", role);
     }
 
     if (process.env.DEV_AUTH_BYPASS === "true") {
