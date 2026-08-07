@@ -49,8 +49,14 @@ export class AuthService {
   async login(dto: LoginDto) {
     const role = normalizePortalRole(dto.role) as PortalRole;
     const loginId = (dto.email ?? dto.username ?? "").trim();
-    console.log("[auth.login] Received role:", dto.role);
-    console.log("[auth.login] Received username:", dto.username ?? dto.email);
+    console.log("[auth.login] Login request received", {
+      role: dto.role,
+      normalizedRole: role,
+      username: dto.username ?? dto.email,
+      loginId,
+      otpProvided: Boolean(dto.otp),
+      requiresOtp: role === "admin" || role === "daycare_admin" || role === "principal"
+    });
 
     const requiresOtp = role === "admin" || role === "daycare_admin" || role === "principal";
     if (requiresOtp) {
