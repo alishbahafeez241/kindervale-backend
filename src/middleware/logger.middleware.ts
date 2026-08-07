@@ -10,10 +10,22 @@ export class LoggerMiddleware implements NestMiddleware {
     const year = now.getFullYear();
     const hours = now.getHours().toString().padStart(2, "0");
     const minutes = now.getMinutes().toString().padStart(2, "0");
+    const seconds = now.getSeconds().toString().padStart(2, "0");
 
-    const formattedDate = `${day}/${month}/${year} ${hours}:${minutes}`;
+    const formattedDate = `${day}/${month}/${year} ${hours}:${minutes}:${seconds}`;
+    const url = req.originalUrl || req.url;
 
-    console.info(`${formattedDate} Request ${req.method} ${req.baseUrl}`);
+    if (req.body && typeof req.body === "object" && Object.keys(req.body).length > 0) {
+      const safeBody = { ...req.body };
+      if ("password" in safeBody) safeBody.password = "***";
+      if ("confirmNewPassword" in safeBody) safeBody.confirmNewPassword = "***";
+      if ("newPassword" in safeBody) safeBody.newPassword = "***";
+      console.info(`${formattedDate} Request ${req.method} ${url} ${JSON.stringify(safeBody)}`);
+    } else {
+      console.info(`${formattedDate} Request ${req.method} ${url}`);
+    }
+
     next();
   }
 }
+

@@ -9,8 +9,6 @@ export class HttpExceptionFilter implements ExceptionFilter {
     let status = HttpStatus.INTERNAL_SERVER_ERROR;
     let message = "Internal Server Error";
 
-    console.error("Unhandled exception:", exception);
-
     if (exception instanceof HttpException) {
       status = exception.getStatus();
       const res = exception.getResponse();
@@ -21,6 +19,14 @@ export class HttpExceptionFilter implements ExceptionFilter {
         // @ts-expect-error Object Type Error
         message = res?.message || message;
       }
+
+      if (status >= 500) {
+        console.error(`[${status}] HttpException:`, message, exception);
+      } else {
+        console.info(`[${status}] ${message}`);
+      }
+    } else {
+      console.error("Unhandled exception:", exception);
     }
 
     response.status(status).json({
