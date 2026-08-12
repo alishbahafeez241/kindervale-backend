@@ -1,0 +1,2 @@
+ALTER TABLE "fees"
+  ADD COLUMN IF NOT EXISTS "scholarship" integer NOT NULL DEFAULT 0;

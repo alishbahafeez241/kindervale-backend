@@ -1,0 +1,21 @@
+# Logs
+*.log
+
+# Dependency Directories
+node_modules
+
+# Environment Variable Files
+.env
+.env.*
+!.env.example
+
+# Build
+dist
+
+# Storage
+uploads
+
+# Developer Directories
+.Extras
+.postman/
+postman/

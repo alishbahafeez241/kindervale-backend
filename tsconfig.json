@@ -1,0 +1,36 @@
+{
+  "compilerOptions": {
+    "module": "nodenext",
+    "moduleResolution": "nodenext",
+    "target": "ES2023",
+    "outDir": "./dist",
+    "strict": false,
+    "resolvePackageJsonExports": true,
+    "esModuleInterop": true,
+    "isolatedModules": true,
+    "declaration": true,
+    "removeComments": true,
+    "emitDecoratorMetadata": true,
+    "experimentalDecorators": true,
+    "allowSyntheticDefaultImports": true,
+    "sourceMap": true,
+    "incremental": true,
+    "skipLibCheck": true,
+    "strictNullChecks": true,
+    "forceConsistentCasingInFileNames": true,
+    "noImplicitAny": false,
+    "strictBindCallApply": false,
+    "noFallthroughCasesInSwitch": false,
+    "baseUrl": "./",
+    "paths":
+    {
+      "common/*": [ "./src/common/*" ],
+      "middleware/*": [ "./src/middleware/*" ],
+      "models/*": [ "./src/models/*" ],
+      "modules/*": [ "./src/modules/*" ],
+      "templates/*": [ "./src/templates/*" ],
+      "types/*": [ "./src/types/*" ],
+      "src/*": [ "./src/*" ]
+    }
+  }
+}

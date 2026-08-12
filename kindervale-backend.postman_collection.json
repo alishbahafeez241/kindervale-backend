@@ -1,0 +1,2155 @@
+{
+  "info": {
+    "name": "Kindervale Backend API",
+    "description": "Postman collection for the Kindervale NestJS backend. Set baseUrl to your backend URL, then run Auth - Login to automatically save accessToken, refreshToken, and userId variables.",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "variable": [
+    {
+      "key": "baseUrl",
+      "value": "http://localhost:5000/api"
+    },
+    {
+      "key": "accessToken",
+      "value": ""
+    },
+    {
+      "key": "refreshToken",
+      "value": ""
+    },
+    {
+      "key": "authUserId",
+      "value": ""
+    },
+    {
+      "key": "userId",
+      "value": ""
+    },
+    {
+      "key": "teacherUserId",
+      "value": ""
+    },
+    {
+      "key": "adminId",
+      "value": ""
+    },
+    {
+      "key": "teacherId",
+      "value": ""
+    },
+    {
+      "key": "parentId",
+      "value": ""
+    },
+    {
+      "key": "studentId",
+      "value": ""
+    },
+    {
+      "key": "classId",
+      "value": ""
+    },
+    {
+      "key": "sectionId",
+      "value": ""
+    },
+    {
+      "key": "subjectId",
+      "value": ""
+    },
+    {
+      "key": "attendanceId",
+      "value": ""
+    },
+    {
+      "key": "homeworkId",
+      "value": ""
+    },
+    {
+      "key": "lessonPlanId",
+      "value": ""
+    },
+    {
+      "key": "roleId",
+      "value": ""
+    },
+    {
+      "key": "permissionId",
+      "value": ""
+    },
+    {
+      "key": "feeId",
+      "value": ""
+    },
+    {
+      "key": "examId",
+      "value": ""
+    },
+    {
+      "key": "reportCardId",
+      "value": ""
+    },
+    {
+      "key": "calendarEventId",
+      "value": ""
+    },
+    {
+      "key": "timetableId",
+      "value": ""
+    },
+    {
+      "key": "documentId",
+      "value": ""
+    },
+    {
+      "key": "leaveRequestId",
+      "value": ""
+    },
+    {
+      "key": "expenseId",
+      "value": ""
+    },
+    {
+      "key": "faqId",
+      "value": ""
+    },
+    {
+      "key": "schoolPolicyId",
+      "value": ""
+    },
+    {
+      "key": "daycareReportId",
+      "value": ""
+    },
+    {
+      "key": "daycareResourceId",
+      "value": ""
+    },
+    {
+      "key": "backupId",
+      "value": ""
+    },
+    {
+      "key": "notificationId",
+      "value": ""
+    }
+  ],
+  "auth": {
+    "type": "bearer",
+    "bearer": [
+      {
+        "key": "token",
+        "value": "{{accessToken}}",
+        "type": "string"
+      }
+    ]
+  },
+  "event": [
+    {
+      "listen": "prerequest",
+      "script": {
+        "type": "text/javascript",
+        "exec": [
+          "const publicRequests = ['Login', 'Forgot Password', 'Reset Password'];",
+          "if (!publicRequests.includes(pm.info.requestName) && !pm.collectionVariables.get('accessToken')) {",
+          "  pm.sendRequest({",
+          "    url: `${pm.collectionVariables.get('baseUrl')}/auth/login`,",
+          "    method: 'POST',",
+          "    header: { 'Content-Type': 'application/json' },",
+          "    body: {",
+          "      mode: 'raw',",
+          "      raw: JSON.stringify({ role: 'daycare_admin', username: 'daycareadmin', password: 'demo123', otp: '0000' })",
+          "    }",
+          "  }, (err, res) => {",
+          "    if (err || !res) return;",
+          "    const json = res.json();",
+          "    const data = json.data || {};",
+          "    if (data.accessToken) pm.collectionVariables.set('accessToken', data.accessToken);",
+          "    if (data.refreshToken) pm.collectionVariables.set('refreshToken', data.refreshToken);",
+          "    if (data.user?.id) pm.collectionVariables.set('authUserId', data.user.id);",
+          "  });",
+          "}"
+        ]
+      }
+    },
+    {
+      "listen": "test",
+      "script": {
+        "type": "text/javascript",
+        "exec": [
+          "const idVariableByRequest = {",
+          "  'Create User': 'userId',",
+          "  'List Users': 'userId',",
+          "  'Create Teacher User': 'teacherUserId',",
+          "  'Create Admin': 'adminId',",
+          "  'List Admins': 'adminId',",
+          "  'Create Teacher': 'teacherId',",
+          "  'List Teachers': 'teacherId',",
+          "  'Create Parent': 'parentId',",
+          "  'List Parents': 'parentId',",
+          "  'Create Student': 'studentId',",
+          "  'List Students': 'studentId',",
+          "  'Create Class': 'classId',",
+          "  'List Classes': 'classId',",
+          "  'Create Section': 'sectionId',",
+          "  'List Sections': 'sectionId',",
+          "  'Create Subject': 'subjectId',",
+          "  'List Subjects': 'subjectId',",
+          "  'Create Attendance': 'attendanceId',",
+          "  'List Attendance': 'attendanceId',",
+          "  'Create Homework': 'homeworkId',",
+          "  'List Homework': 'homeworkId',",
+          "  'Create Lesson Plan': 'lessonPlanId',",
+          "  'List Lesson Plans': 'lessonPlanId',",
+          "  'Create Role': 'roleId',",
+          "  'List Roles': 'roleId',",
+          "  'Create Permission': 'permissionId',",
+          "  'List Permissions': 'permissionId',",
+          "  'Create Fee': 'feeId',",
+          "  'List Fees': 'feeId',",
+          "  'Create Exam': 'examId',",
+          "  'List Exams': 'examId',",
+          "  'Create Report Card': 'reportCardId',",
+          "  'List Report Cards': 'reportCardId',",
+          "  'Create Calendar Event': 'calendarEventId',",
+          "  'List Calendar Events': 'calendarEventId',",
+          "  'Create Timetable': 'timetableId',",
+          "  'List Timetables': 'timetableId',",
+          "  'Create Document': 'documentId',",
+          "  'List Documents': 'documentId',",
+          "  'Create Notification': 'notificationId',",
+          "  'List Notifications': 'notificationId',",
+          "  'Create Leave Request': 'leaveRequestId',",
+          "  'List Leave Requests': 'leaveRequestId',",
+          "  'Create Expense': 'expenseId',",
+          "  'List Expenses': 'expenseId',",
+          "  'Create FAQ': 'faqId',",
+          "  'List FAQs': 'faqId',",
+          "  'Create School Policy': 'schoolPolicyId',",
+          "  'List School Policies': 'schoolPolicyId',",
+          "  'Create Daycare Report': 'daycareReportId',",
+          "  'List Daycare Reports': 'daycareReportId',",
+          "  'Create Daycare Resource': 'daycareResourceId',",
+          "  'List Daycare Resources': 'daycareResourceId',",
+          "  'Create Backup': 'backupId',",
+          "  'List Backups': 'backupId'",
+          "};",
+          "",
+          "function responseJson() {",
+          "  try { return pm.response.json(); } catch (error) { return null; }",
+          "}",
+          "",
+          "function firstIdFrom(data) {",
+          "  if (data?.id) return data.id;",
+          "  if (data?.items?.[0]?.id) return data.items[0].id;",
+          "  if (Array.isArray(data) && data[0]?.id) return data[0].id;",
+          "  return null;",
+          "}",
+          "",
+          "const json = responseJson();",
+          "const idVariable = idVariableByRequest[pm.info.requestName];",
+          "const id = firstIdFrom(json?.data);",
+          "if (idVariable && id) {",
+          "  pm.collectionVariables.set(idVariable, id);",
+          "}",
+          "",
+          "if (json?.data?.accessToken) pm.collectionVariables.set('accessToken', json.data.accessToken);",
+          "if (json?.data?.refreshToken) pm.collectionVariables.set('refreshToken', json.data.refreshToken);",
+          "if (json?.data?.user?.id) pm.collectionVariables.set('authUserId', json.data.user.id);",
+          "",
+          "if (pm.response.code === 401 && /expired/i.test(json?.message || '') && pm.collectionVariables.get('refreshToken')) {",
+          "  pm.sendRequest({",
+          "    url: `${pm.collectionVariables.get('baseUrl')}/auth/refresh`,",
+          "    method: 'POST',",
+          "    header: { 'Content-Type': 'application/json' },",
+          "    body: { mode: 'raw', raw: JSON.stringify({ refreshToken: pm.collectionVariables.get('refreshToken') }) }",
+          "  }, (err, res) => {",
+          "    if (err || !res) { console.warn('Token refresh failed. Run Auth -> Login again.'); return; }",
+          "    const refreshJson = res.json();",
+          "    const refreshData = refreshJson.data || {};",
+          "    if (refreshData.accessToken) pm.collectionVariables.set('accessToken', refreshData.accessToken);",
+          "    if (refreshData.refreshToken) pm.collectionVariables.set('refreshToken', refreshData.refreshToken);",
+          "    console.warn('Access token refreshed. Send this request again.');",
+          "  });",
+          "}"
+        ]
+      }
+    }
+  ],
+  "item": [
+    {
+      "name": "Auth",
+      "item": [
+        {
+          "name": "Login",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "const json = pm.response.json();",
+                  "const data = json.data || {};",
+                  "if (data.accessToken) pm.collectionVariables.set('accessToken', data.accessToken);",
+                  "if (data.refreshToken) pm.collectionVariables.set('refreshToken', data.refreshToken);",
+                  "if (data.user?.id) pm.collectionVariables.set('authUserId', data.user.id);"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"role\": \"daycare_admin\",\n  \"username\": \"daycareadmin\",\n  \"password\": \"demo123\",\n  \"otp\": \"0000\"\n}"
+            },
+            "url": "{{baseUrl}}/auth/login"
+          }
+        },
+        {
+          "name": "Refresh Token",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "const json = pm.response.json();",
+                  "const data = json.data || {};",
+                  "if (data.accessToken) pm.collectionVariables.set('accessToken', data.accessToken);",
+                  "if (data.refreshToken) pm.collectionVariables.set('refreshToken', data.refreshToken);"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"refreshToken\": \"{{refreshToken}}\"\n}"
+            },
+            "url": "{{baseUrl}}/auth/refresh"
+          }
+        },
+        {
+          "name": "Logout",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"refreshToken\": \"{{refreshToken}}\"\n}"
+            },
+            "url": "{{baseUrl}}/auth/logout"
+          }
+        },
+        {
+          "name": "Forgot Password",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"username\": \"admin\",\n  \"email\": \"admin@example.com\"\n}"
+            },
+            "url": "{{baseUrl}}/auth/forgot-password"
+          }
+        },
+        {
+          "name": "Reset Password",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"admin@example.com\",\n  \"otp\": \"0000\",\n  \"newPassword\": \"demo123\"\n}"
+            },
+            "url": "{{baseUrl}}/auth/reset-password"
+          }
+        },
+        {
+          "name": "Change Password",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"currentPassword\": \"password\",\n  \"newPassword\": \"password123\"\n}"
+            },
+            "url": "{{baseUrl}}/auth/change-password"
+          }
+        },
+        {
+          "name": "Profile",
+          "request": {
+            "method": "GET",
+            "url": "{{baseUrl}}/auth/profile"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Core Management",
+      "item": [
+        {
+          "name": "Create User",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "const json = pm.response.json();",
+                  "if (json.data?.id) pm.collectionVariables.set('userId', json.data.id);"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Postman Admin\",\n  \"username\": \"postman.admin.{{$timestamp}}\",\n  \"email\": \"postman.admin.{{$timestamp}}@example.com\",\n  \"password\": \"demo123\",\n  \"role\": \"ADMIN\"\n}"
+            },
+            "url": "{{baseUrl}}/users"
+          }
+        },
+        {
+          "name": "Create Teacher User",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "const json = pm.response.json();",
+                  "if (json.data?.id) pm.collectionVariables.set('teacherUserId', json.data.id);"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Postman Teacher\",\n  \"username\": \"postman.teacher.{{$timestamp}}\",\n  \"email\": \"postman.teacher.{{$timestamp}}@example.com\",\n  \"password\": \"demo123\",\n  \"role\": \"TEACHER\"\n}"
+            },
+            "url": "{{baseUrl}}/users"
+          }
+        },
+        {
+          "name": "List Users",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "const json = pm.response.json();",
+                  "const first = json.data?.items?.[0];",
+                  "if (first?.id && !pm.collectionVariables.get('userId')) pm.collectionVariables.set('userId', first.id);"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "url": "{{baseUrl}}/users?page=1&limit=10&sortBy=createdAt&sortOrder=desc"
+          }
+        },
+        {
+          "name": "Get User",
+          "request": {
+            "method": "GET",
+            "url": "{{baseUrl}}/users/{{userId}}"
+          }
+        },
+        {
+          "name": "Update User",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Updated User\",\n  \"status\": \"ACTIVE\"\n}"
+            },
+            "url": "{{baseUrl}}/users/{{userId}}"
+          }
+        },
+        {
+          "name": "Delete User",
+          "request": {
+            "method": "DELETE",
+            "url": "{{baseUrl}}/users/{{userId}}"
+          }
+        },
+        {
+          "name": "Create Admin",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "const json = pm.response.json();",
+                  "if (json.data?.id) pm.collectionVariables.set('adminId', json.data.id);"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"userId\": \"{{userId}}\",\n  \"phone\": \"+10000000000\",\n  \"designation\": \"Administrator\",\n  \"permissions\": [\"users:read\"]\n}"
+            },
+            "url": "{{baseUrl}}/admins"
+          }
+        },
+        {
+          "name": "List Admins",
+          "request": {
+            "method": "GET",
+            "url": "{{baseUrl}}/admins"
+          }
+        },
+        {
+          "name": "Get Admin",
+          "request": {
+            "method": "GET",
+            "url": "{{baseUrl}}/admins/{{adminId}}"
+          }
+        },
+        {
+          "name": "Update Admin",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"designation\": \"Principal\"\n}"
+            },
+            "url": "{{baseUrl}}/admins/{{adminId}}"
+          }
+        },
+        {
+          "name": "Delete Admin",
+          "request": {
+            "method": "DELETE",
+            "url": "{{baseUrl}}/admins/{{adminId}}"
+          }
+        }
+      ]
+    },
+    {
+      "name": "People",
+      "item": [
+        {
+          "name": "Create Teacher",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "const json = pm.response.json();",
+                  "if (json.data?.id) pm.collectionVariables.set('teacherId', json.data.id);"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"userId\": \"{{teacherUserId}}\",\n  \"phone\": \"+10000000001\",\n  \"subject\": \"Mathematics\",\n  \"className\": \"KG-1\",\n  \"attendance\": \"PRESENT\"\n}"
+            },
+            "url": "{{baseUrl}}/teachers"
+          }
+        },
+        {
+          "name": "List Teachers",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "const json = pm.response.json();",
+                  "const first = json.data?.items?.[0];",
+                  "if (first?.id && !pm.collectionVariables.get('teacherId')) pm.collectionVariables.set('teacherId', first.id);"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "url": "{{baseUrl}}/teachers?page=1&limit=10&sortBy=createdAt&sortOrder=desc"
+          }
+        },
+        {
+          "name": "Get Teacher",
+          "request": {
+            "method": "GET",
+            "url": "{{baseUrl}}/teachers/{{teacherId}}"
+          }
+        },
+        {
+          "name": "Update Teacher",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"subject\": \"English\",\n  \"attendance\": \"PRESENT\"\n}"
+            },
+            "url": "{{baseUrl}}/teachers/{{teacherId}}"
+          }
+        },
+        {
+          "name": "Delete Teacher",
+          "request": {
+            "method": "DELETE",
+            "url": "{{baseUrl}}/teachers/{{teacherId}}"
+          }
+        },
+        {
+          "name": "Create Parent",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Parent User\",\n  \"email\": \"parent@example.com\",\n  \"phone\": \"+10000000002\"\n}"
+            },
+            "url": "{{baseUrl}}/parents"
+          }
+        },
+        {
+          "name": "List Parents",
+          "request": {
+            "method": "GET",
+            "url": "{{baseUrl}}/parents?page=1&limit=10&sortBy=createdAt&sortOrder=desc"
+          }
+        },
+        {
+          "name": "Get Parent",
+          "request": {
+            "method": "GET",
+            "url": "{{baseUrl}}/parents/{{parentId}}"
+          }
+        },
+        {
+          "name": "Get Parent Students",
+          "request": {
+            "method": "GET",
+            "url": "{{baseUrl}}/parents/{{parentId}}/students"
+          }
+        },
+        {
+          "name": "Update Parent",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"phone\": \"+10000000003\"\n}"
+            },
+            "url": "{{baseUrl}}/parents/{{parentId}}"
+          }
+        },
+        {
+          "name": "Delete Parent",
+          "request": {
+            "method": "DELETE",
+            "url": "{{baseUrl}}/parents/{{parentId}}"
+          }
+        },
+        {
+          "name": "Create Student",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"admissionNo\": \"ADM-001\",\n  \"parentId\": \"{{parentId}}\",\n  \"name\": \"Student User\",\n  \"className\": \"KG-1\",\n  \"age\": 5,\n  \"birthday\": \"2021-08-01\",\n  \"attendance\": 95,\n  \"phone\": \"+10000000004\",\n  \"feeStatus\": \"PENDING\"\n}"
+            },
+            "url": "{{baseUrl}}/students"
+          }
+        },
+        {
+          "name": "List Students",
+          "request": {
+            "method": "GET",
+            "url": "{{baseUrl}}/students?page=1&limit=10&sortBy=createdAt&sortOrder=desc"
+          }
+        },
+        {
+          "name": "Get Student",
+          "request": {
+            "method": "GET",
+            "url": "{{baseUrl}}/students/{{studentId}}"
+          }
+        },
+        {
+          "name": "Update Student",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"attendance\": 98,\n  \"feeStatus\": \"PAID\"\n}"
+            },
+            "url": "{{baseUrl}}/students/{{studentId}}"
+          }
+        },
+        {
+          "name": "Delete Student",
+          "request": {
+            "method": "DELETE",
+            "url": "{{baseUrl}}/students/{{studentId}}"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Academics",
+      "item": [
+        {
+          "name": "Create Class",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"KG-1\",\n  \"teacher\": \"Ms. Smith\",\n  \"homeroomTeacherId\": \"{{teacherId}}\",\n  \"academicYear\": \"2026-2027\",\n  \"capacity\": 30\n}"
+            },
+            "url": "{{baseUrl}}/classes"
+          }
+        },
+        {
+          "name": "List Classes",
+          "request": {
+            "method": "GET",
+            "url": "{{baseUrl}}/classes?page=1&limit=10&sortBy=createdAt&sortOrder=desc"
+          }
+        },
+        {
+          "name": "Get Class",
+          "request": {
+            "method": "GET",
+            "url": "{{baseUrl}}/classes/{{classId}}"
+          }
+        },
+        {
+          "name": "Update Class",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"capacity\": 35\n}"
+            },
+            "url": "{{baseUrl}}/classes/{{classId}}"
+          }
+        },
+        {
+          "name": "Delete Class",
+          "request": {
+            "method": "DELETE",
+            "url": "{{baseUrl}}/classes/{{classId}}"
+          }
+        },
+        {
+          "name": "Create Section",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"classId\": \"{{classId}}\",\n  \"name\": \"A\",\n  \"capacity\": 20\n}"
+            },
+            "url": "{{baseUrl}}/sections"
+          }
+        },
+        {
+          "name": "List Sections",
+          "request": {
+            "method": "GET",
+            "url": "{{baseUrl}}/sections?classId={{classId}}"
+          }
+        },
+        {
+          "name": "Get Section",
+          "request": {
+            "method": "GET",
+            "url": "{{baseUrl}}/sections/{{sectionId}}"
+          }
+        },
+        {
+          "name": "Update Section",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"capacity\": 25\n}"
+            },
+            "url": "{{baseUrl}}/sections/{{sectionId}}"
+          }
+        },
+        {
+          "name": "Delete Section",
+          "request": {
+            "method": "DELETE",
+            "url": "{{baseUrl}}/sections/{{sectionId}}"
+          }
+        },
+        {
+          "name": "Create Subject",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Mathematics\",\n  \"code\": \"MATH-101\",\n  \"description\": \"Basic mathematics\",\n  \"classId\": \"{{classId}}\",\n  \"teacherId\": \"{{teacherId}}\"\n}"
+            },
+            "url": "{{baseUrl}}/subjects"
+          }
+        },
+        {
+          "name": "List Subjects",
+          "request": {
+            "method": "GET",
+            "url": "{{baseUrl}}/subjects?page=1&limit=10&sortBy=createdAt&sortOrder=desc"
+          }
+        },
+        {
+          "name": "Get Subject",
+          "request": {
+            "method": "GET",
+            "url": "{{baseUrl}}/subjects/{{subjectId}}"
+          }
+        },
+        {
+          "name": "Update Subject",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"description\": \"Updated subject description\"\n}"
+            },
+            "url": "{{baseUrl}}/subjects/{{subjectId}}"
+          }
+        },
+        {
+          "name": "Delete Subject",
+          "request": {
+            "method": "DELETE",
+            "url": "{{baseUrl}}/subjects/{{subjectId}}"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Attendance, Homework, Lesson Plans",
+      "item": [
+        {
+          "name": "Create Attendance",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"studentId\": \"{{studentId}}\",\n  \"classId\": \"{{classId}}\",\n  \"date\": \"2026-08-01\",\n  \"status\": \"PRESENT\",\n  \"remarks\": \"On time\"\n}"
+            },
+            "url": "{{baseUrl}}/attendance"
+          }
+        },
+        {
+          "name": "Bulk Attendance",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"classId\": \"{{classId}}\",\n  \"date\": \"2026-08-01\",\n  \"records\": [\n    { \"studentId\": \"{{studentId}}\", \"status\": \"PRESENT\", \"remarks\": \"On time\" }\n  ]\n}"
+            },
+            "url": "{{baseUrl}}/attendance/bulk"
+          }
+        },
+        {
+          "name": "List Attendance",
+          "request": {
+            "method": "GET",
+            "url": "{{baseUrl}}/attendance?page=1&limit=10&sortBy=date&sortOrder=desc"
+          }
+        },
+        {
+          "name": "Get Attendance",
+          "request": {
+            "method": "GET",
+            "url": "{{baseUrl}}/attendance/{{attendanceId}}"
+          }
+        },
+        {
+          "name": "Update Attendance",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"status\": \"ABSENT\",\n  \"remarks\": \"Sick leave\"\n}"
+            },
+            "url": "{{baseUrl}}/attendance/{{attendanceId}}"
+          }
+        },
+        {
+          "name": "Delete Attendance",
+          "request": {
+            "method": "DELETE",
+            "url": "{{baseUrl}}/attendance/{{attendanceId}}"
+          }
+        },
+        {
+          "name": "Create Homework",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"title\": \"Counting Practice\",\n  \"description\": \"Complete worksheet 1\",\n  \"classId\": \"{{classId}}\",\n  \"subjectId\": \"{{subjectId}}\",\n  \"teacherId\": \"{{teacherId}}\",\n  \"className\": \"KG-1\",\n  \"subject\": \"Mathematics\",\n  \"dueDate\": \"2026-08-10\"\n}"
+            },
+            "url": "{{baseUrl}}/homework"
+          }
+        },
+        {
+          "name": "List Homework",
+          "request": {
+            "method": "GET",
+            "url": "{{baseUrl}}/homework?page=1&limit=10&sortBy=dueDate&sortOrder=asc"
+          }
+        },
+        {
+          "name": "Get Homework",
+          "request": {
+            "method": "GET",
+            "url": "{{baseUrl}}/homework/{{homeworkId}}"
+          }
+        },
+        {
+          "name": "Update Homework",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"description\": \"Updated homework\"\n}"
+            },
+            "url": "{{baseUrl}}/homework/{{homeworkId}}"
+          }
+        },
+        {
+          "name": "Delete Homework",
+          "request": {
+            "method": "DELETE",
+            "url": "{{baseUrl}}/homework/{{homeworkId}}"
+          }
+        },
+        {
+          "name": "Create Lesson Plan",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"teacherId\": \"{{teacherId}}\",\n  \"classId\": \"{{classId}}\",\n  \"subjectId\": \"{{subjectId}}\",\n  \"subject\": \"Mathematics\",\n  \"weekStartDate\": \"2026-08-03\",\n  \"objectives\": \"Introduce counting\",\n  \"activities\": \"Worksheet and group activity\",\n  \"resources\": \"Counters and whiteboard\"\n}"
+            },
+            "url": "{{baseUrl}}/lesson-plans"
+          }
+        },
+        {
+          "name": "List Lesson Plans",
+          "request": {
+            "method": "GET",
+            "url": "{{baseUrl}}/lesson-plans?page=1&limit=10&sortBy=createdAt&sortOrder=desc"
+          }
+        },
+        {
+          "name": "Get Lesson Plan",
+          "request": {
+            "method": "GET",
+            "url": "{{baseUrl}}/lesson-plans/{{lessonPlanId}}"
+          }
+        },
+        {
+          "name": "Update Lesson Plan",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"objectives\": \"Updated objectives\"\n}"
+            },
+            "url": "{{baseUrl}}/lesson-plans/{{lessonPlanId}}"
+          }
+        },
+        {
+          "name": "Submit Lesson Plan",
+          "request": {
+            "method": "POST",
+            "url": "{{baseUrl}}/lesson-plans/{{lessonPlanId}}/submit"
+          }
+        },
+        {
+          "name": "Review Lesson Plan",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"status\": \"APPROVED\",\n  \"reviewRemarks\": \"Approved\"\n}"
+            },
+            "url": "{{baseUrl}}/lesson-plans/{{lessonPlanId}}/review"
+          }
+        },
+        {
+          "name": "Delete Lesson Plan",
+          "request": {
+            "method": "DELETE",
+            "url": "{{baseUrl}}/lesson-plans/{{lessonPlanId}}"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Roles and Permissions",
+      "item": [
+        {
+          "name": "Create Role",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"ADMIN\",\n  \"description\": \"Administrator role\"\n}"
+            },
+            "url": "{{baseUrl}}/roles"
+          }
+        },
+        {
+          "name": "List Roles",
+          "request": {
+            "method": "GET",
+            "url": "{{baseUrl}}/roles"
+          }
+        },
+        {
+          "name": "Get Role",
+          "request": {
+            "method": "GET",
+            "url": "{{baseUrl}}/roles/{{roleId}}"
+          }
+        },
+        {
+          "name": "Update Role",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"description\": \"Updated role\"\n}"
+            },
+            "url": "{{baseUrl}}/roles/{{roleId}}"
+          }
+        },
+        {
+          "name": "Delete Role",
+          "request": {
+            "method": "DELETE",
+            "url": "{{baseUrl}}/roles/{{roleId}}"
+          }
+        },
+        {
+          "name": "Create Permission",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"module\": \"users\",\n  \"action\": \"read\",\n  \"description\": \"Read users\"\n}"
+            },
+            "url": "{{baseUrl}}/permissions"
+          }
+        },
+        {
+          "name": "List Permissions",
+          "request": {
+            "method": "GET",
+            "url": "{{baseUrl}}/permissions"
+          }
+        },
+        {
+          "name": "Get Permission",
+          "request": {
+            "method": "GET",
+            "url": "{{baseUrl}}/permissions/{{permissionId}}"
+          }
+        },
+        {
+          "name": "Update Permission",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"description\": \"Updated permission\"\n}"
+            },
+            "url": "{{baseUrl}}/permissions/{{permissionId}}"
+          }
+        },
+        {
+          "name": "Delete Permission",
+          "request": {
+            "method": "DELETE",
+            "url": "{{baseUrl}}/permissions/{{permissionId}}"
+          }
+        },
+        {
+          "name": "Assign Role Permissions",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"permissionIds\": [\"{{permissionId}}\"]\n}"
+            },
+            "url": "{{baseUrl}}/roles/{{roleId}}/permissions"
+          }
+        },
+        {
+          "name": "Get Role Permissions",
+          "request": {
+            "method": "GET",
+            "url": "{{baseUrl}}/roles/{{roleId}}/permissions"
+          }
+        },
+        {
+          "name": "Seed Default Roles",
+          "request": {
+            "method": "POST",
+            "url": "{{baseUrl}}/roles/seed-defaults"
+          }
+        }
+      ]
+    },
+    {
+      "name": "School Operations",
+      "item": [
+        {
+          "name": "Dashboard",
+          "request": {
+            "method": "GET",
+            "url": "{{baseUrl}}/dashboard"
+          }
+        },
+        {
+          "name": "Create Fee",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"invoice\": \"INV-001\",\n  \"studentId\": \"{{studentId}}\",\n  \"amount\": 1500,\n  \"dueDate\": \"2026-08-15\",\n  \"status\": \"PENDING\"\n}"
+            },
+            "url": "{{baseUrl}}/fees"
+          }
+        },
+        {
+          "name": "List Fees",
+          "request": {
+            "method": "GET",
+            "url": "{{baseUrl}}/fees"
+          }
+        },
+        {
+          "name": "Get Fee",
+          "request": {
+            "method": "GET",
+            "url": "{{baseUrl}}/fees/{{feeId}}"
+          }
+        },
+        {
+          "name": "Update Fee",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"status\": \"PAID\"\n}"
+            },
+            "url": "{{baseUrl}}/fees/{{feeId}}"
+          }
+        },
+        {
+          "name": "Delete Fee",
+          "request": {
+            "method": "DELETE",
+            "url": "{{baseUrl}}/fees/{{feeId}}"
+          }
+        },
+        {
+          "name": "Create Exam",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"title\": \"Midterm Exam\",\n  \"subject\": \"Mathematics\",\n  \"className\": \"KG-1\",\n  \"date\": \"2026-09-01\",\n  \"maxMarks\": 100\n}"
+            },
+            "url": "{{baseUrl}}/exams"
+          }
+        },
+        {
+          "name": "List Exams",
+          "request": {
+            "method": "GET",
+            "url": "{{baseUrl}}/exams"
+          }
+        },
+        {
+          "name": "Get Exam",
+          "request": {
+            "method": "GET",
+            "url": "{{baseUrl}}/exams/{{examId}}"
+          }
+        },
+        {
+          "name": "Update Exam",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"maxMarks\": 50\n}"
+            },
+            "url": "{{baseUrl}}/exams/{{examId}}"
+          }
+        },
+        {
+          "name": "Delete Exam",
+          "request": {
+            "method": "DELETE",
+            "url": "{{baseUrl}}/exams/{{examId}}"
+          }
+        },
+        {
+          "name": "Create Report Card",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"studentId\": \"{{studentId}}\",\n  \"term\": \"Term 1\",\n  \"className\": \"KG-1\",\n  \"academicYear\": \"2026-2027\",\n  \"summary\": \"Good progress\"\n}"
+            },
+            "url": "{{baseUrl}}/report-cards"
+          }
+        },
+        {
+          "name": "List Report Cards",
+          "request": {
+            "method": "GET",
+            "url": "{{baseUrl}}/report-cards"
+          }
+        },
+        {
+          "name": "Get Report Card",
+          "request": {
+            "method": "GET",
+            "url": "{{baseUrl}}/report-cards/{{reportCardId}}"
+          }
+        },
+        {
+          "name": "Update Report Card",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"summary\": \"Updated summary\"\n}"
+            },
+            "url": "{{baseUrl}}/report-cards/{{reportCardId}}"
+          }
+        },
+        {
+          "name": "Publish Report Card",
+          "request": {
+            "method": "POST",
+            "url": "{{baseUrl}}/report-cards/{{reportCardId}}/publish"
+          }
+        },
+        {
+          "name": "Delete Report Card",
+          "request": {
+            "method": "DELETE",
+            "url": "{{baseUrl}}/report-cards/{{reportCardId}}"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Resources and Communication",
+      "item": [
+        {
+          "name": "Create Calendar Event",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"title\": \"Parents Meeting\",\n  \"date\": \"2026-08-20\",\n  \"type\": \"meeting\"\n}"
+            },
+            "url": "{{baseUrl}}/calendar-events"
+          }
+        },
+        {
+          "name": "List Calendar Events",
+          "request": {
+            "method": "GET",
+            "url": "{{baseUrl}}/calendar-events"
+          }
+        },
+        {
+          "name": "Get Calendar Event",
+          "request": {
+            "method": "GET",
+            "url": "{{baseUrl}}/calendar-events/{{calendarEventId}}"
+          }
+        },
+        {
+          "name": "Update Calendar Event",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"title\": \"Updated Meeting\"\n}"
+            },
+            "url": "{{baseUrl}}/calendar-events/{{calendarEventId}}"
+          }
+        },
+        {
+          "name": "Delete Calendar Event",
+          "request": {
+            "method": "DELETE",
+            "url": "{{baseUrl}}/calendar-events/{{calendarEventId}}"
+          }
+        },
+        {
+          "name": "Create Timetable",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"className\": \"KG-1\",\n  \"dayOfWeek\": \"Monday\",\n  \"startTime\": \"09:00\",\n  \"endTime\": \"10:00\",\n  \"subject\": \"Mathematics\",\n  \"classId\": \"{{classId}}\",\n  \"teacherId\": \"{{teacherId}}\",\n  \"room\": \"Room 1\"\n}"
+            },
+            "url": "{{baseUrl}}/timetables"
+          }
+        },
+        {
+          "name": "List Timetables",
+          "request": {
+            "method": "GET",
+            "url": "{{baseUrl}}/timetables"
+          }
+        },
+        {
+          "name": "Get Timetable",
+          "request": {
+            "method": "GET",
+            "url": "{{baseUrl}}/timetables/{{timetableId}}"
+          }
+        },
+        {
+          "name": "Update Timetable",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"room\": \"Room 2\"\n}"
+            },
+            "url": "{{baseUrl}}/timetables/{{timetableId}}"
+          }
+        },
+        {
+          "name": "Delete Timetable",
+          "request": {
+            "method": "DELETE",
+            "url": "{{baseUrl}}/timetables/{{timetableId}}"
+          }
+        },
+        {
+          "name": "Create Document",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"title\": \"Handbook\",\n  \"description\": \"School handbook\",\n  \"fileUrl\": \"https://example.com/handbook.pdf\",\n  \"audience\": \"ALL\"\n}"
+            },
+            "url": "{{baseUrl}}/documents"
+          }
+        },
+        {
+          "name": "List Documents",
+          "request": {
+            "method": "GET",
+            "url": "{{baseUrl}}/documents"
+          }
+        },
+        {
+          "name": "Get Document",
+          "request": {
+            "method": "GET",
+            "url": "{{baseUrl}}/documents/{{documentId}}"
+          }
+        },
+        {
+          "name": "Update Document",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"description\": \"Updated document\"\n}"
+            },
+            "url": "{{baseUrl}}/documents/{{documentId}}"
+          }
+        },
+        {
+          "name": "Delete Document",
+          "request": {
+            "method": "DELETE",
+            "url": "{{baseUrl}}/documents/{{documentId}}"
+          }
+        },
+        {
+          "name": "Create Notification",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"title\": \"Notice\",\n  \"body\": \"School is open tomorrow\",\n  \"date\": \"2026-08-01\",\n  \"audience\": \"ALL\"\n}"
+            },
+            "url": "{{baseUrl}}/notifications"
+          }
+        },
+        {
+          "name": "List Notifications",
+          "request": {
+            "method": "GET",
+            "url": "{{baseUrl}}/notifications"
+          }
+        },
+        {
+          "name": "Get Notification",
+          "request": {
+            "method": "GET",
+            "url": "{{baseUrl}}/notifications/{{notificationId}}"
+          }
+        },
+        {
+          "name": "Update Notification",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"body\": \"Updated notice\"\n}"
+            },
+            "url": "{{baseUrl}}/notifications/{{notificationId}}"
+          }
+        },
+        {
+          "name": "Delete Notification",
+          "request": {
+            "method": "DELETE",
+            "url": "{{baseUrl}}/notifications/{{notificationId}}"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Administration Extras",
+      "item": [
+        {
+          "name": "Create Leave Request",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"userId\": \"{{userId}}\",\n  \"fromDate\": \"2026-08-10\",\n  \"toDate\": \"2026-08-12\",\n  \"reason\": \"Family event\"\n}"
+            },
+            "url": "{{baseUrl}}/leave-requests"
+          }
+        },
+        {
+          "name": "List Leave Requests",
+          "request": {
+            "method": "GET",
+            "url": "{{baseUrl}}/leave-requests"
+          }
+        },
+        {
+          "name": "Get Leave Request",
+          "request": {
+            "method": "GET",
+            "url": "{{baseUrl}}/leave-requests/{{leaveRequestId}}"
+          }
+        },
+        {
+          "name": "Update Leave Request",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"reason\": \"Updated reason\"\n}"
+            },
+            "url": "{{baseUrl}}/leave-requests/{{leaveRequestId}}"
+          }
+        },
+        {
+          "name": "Review Leave Request",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"status\": \"APPROVED\",\n  \"reviewRemarks\": \"Approved\"\n}"
+            },
+            "url": "{{baseUrl}}/leave-requests/{{leaveRequestId}}/review"
+          }
+        },
+        {
+          "name": "Delete Leave Request",
+          "request": {
+            "method": "DELETE",
+            "url": "{{baseUrl}}/leave-requests/{{leaveRequestId}}"
+          }
+        },
+        {
+          "name": "Create Expense",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"title\": \"Stationery\",\n  \"category\": \"Supplies\",\n  \"amount\": 250,\n  \"date\": \"2026-08-01\",\n  \"notes\": \"Class supplies\"\n}"
+            },
+            "url": "{{baseUrl}}/expenses"
+          }
+        },
+        {
+          "name": "List Expenses",
+          "request": {
+            "method": "GET",
+            "url": "{{baseUrl}}/expenses"
+          }
+        },
+        {
+          "name": "Get Expense",
+          "request": {
+            "method": "GET",
+            "url": "{{baseUrl}}/expenses/{{expenseId}}"
+          }
+        },
+        {
+          "name": "Update Expense",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"amount\": 300\n}"
+            },
+            "url": "{{baseUrl}}/expenses/{{expenseId}}"
+          }
+        },
+        {
+          "name": "Delete Expense",
+          "request": {
+            "method": "DELETE",
+            "url": "{{baseUrl}}/expenses/{{expenseId}}"
+          }
+        },
+        {
+          "name": "Create FAQ",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"question\": \"What are school hours?\",\n  \"answer\": \"8 AM to 2 PM\",\n  \"audience\": \"ALL\"\n}"
+            },
+            "url": "{{baseUrl}}/faqs"
+          }
+        },
+        {
+          "name": "List FAQs",
+          "request": {
+            "method": "GET",
+            "url": "{{baseUrl}}/faqs"
+          }
+        },
+        {
+          "name": "Get FAQ",
+          "request": {
+            "method": "GET",
+            "url": "{{baseUrl}}/faqs/{{faqId}}"
+          }
+        },
+        {
+          "name": "Update FAQ",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"answer\": \"Updated answer\"\n}"
+            },
+            "url": "{{baseUrl}}/faqs/{{faqId}}"
+          }
+        },
+        {
+          "name": "Delete FAQ",
+          "request": {
+            "method": "DELETE",
+            "url": "{{baseUrl}}/faqs/{{faqId}}"
+          }
+        },
+        {
+          "name": "Create School Policy",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"title\": \"Attendance Policy\",\n  \"content\": \"Students should attend regularly\",\n  \"audience\": \"ALL\"\n}"
+            },
+            "url": "{{baseUrl}}/school-policies"
+          }
+        },
+        {
+          "name": "List School Policies",
+          "request": {
+            "method": "GET",
+            "url": "{{baseUrl}}/school-policies"
+          }
+        },
+        {
+          "name": "Get School Policy",
+          "request": {
+            "method": "GET",
+            "url": "{{baseUrl}}/school-policies/{{schoolPolicyId}}"
+          }
+        },
+        {
+          "name": "Update School Policy",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"content\": \"Updated policy\"\n}"
+            },
+            "url": "{{baseUrl}}/school-policies/{{schoolPolicyId}}"
+          }
+        },
+        {
+          "name": "Delete School Policy",
+          "request": {
+            "method": "DELETE",
+            "url": "{{baseUrl}}/school-policies/{{schoolPolicyId}}"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Daycare, Backups, Settings",
+      "item": [
+        {
+          "name": "Create Daycare Report",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"studentId\": \"{{studentId}}\",\n  \"date\": \"2026-08-01\",\n  \"meals\": \"Lunch completed\",\n  \"nap\": \"1 hour\",\n  \"activities\": \"Painting\",\n  \"notes\": \"Good day\"\n}"
+            },
+            "url": "{{baseUrl}}/daycare-reports"
+          }
+        },
+        {
+          "name": "List Daycare Reports",
+          "request": {
+            "method": "GET",
+            "url": "{{baseUrl}}/daycare-reports"
+          }
+        },
+        {
+          "name": "Get Daycare Report",
+          "request": {
+            "method": "GET",
+            "url": "{{baseUrl}}/daycare-reports/{{daycareReportId}}"
+          }
+        },
+        {
+          "name": "Update Daycare Report",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"notes\": \"Updated notes\"\n}"
+            },
+            "url": "{{baseUrl}}/daycare-reports/{{daycareReportId}}"
+          }
+        },
+        {
+          "name": "Delete Daycare Report",
+          "request": {
+            "method": "DELETE",
+            "url": "{{baseUrl}}/daycare-reports/{{daycareReportId}}"
+          }
+        },
+        {
+          "name": "Create Daycare Resource",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"title\": \"Nutrition Guide\",\n  \"description\": \"Meal plan guide\",\n  \"fileUrl\": \"https://example.com/nutrition.pdf\"\n}"
+            },
+            "url": "{{baseUrl}}/daycare-resources"
+          }
+        },
+        {
+          "name": "List Daycare Resources",
+          "request": {
+            "method": "GET",
+            "url": "{{baseUrl}}/daycare-resources"
+          }
+        },
+        {
+          "name": "Get Daycare Resource",
+          "request": {
+            "method": "GET",
+            "url": "{{baseUrl}}/daycare-resources/{{daycareResourceId}}"
+          }
+        },
+        {
+          "name": "Update Daycare Resource",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"description\": \"Updated resource\"\n}"
+            },
+            "url": "{{baseUrl}}/daycare-resources/{{daycareResourceId}}"
+          }
+        },
+        {
+          "name": "Delete Daycare Resource",
+          "request": {
+            "method": "DELETE",
+            "url": "{{baseUrl}}/daycare-resources/{{daycareResourceId}}"
+          }
+        },
+        {
+          "name": "Create Backup",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"type\": \"manual\"\n}"
+            },
+            "url": "{{baseUrl}}/backups"
+          }
+        },
+        {
+          "name": "List Backups",
+          "request": {
+            "method": "GET",
+            "url": "{{baseUrl}}/backups"
+          }
+        },
+        {
+          "name": "Get Backup",
+          "request": {
+            "method": "GET",
+            "url": "{{baseUrl}}/backups/{{backupId}}"
+          }
+        },
+        {
+          "name": "Get Settings",
+          "request": {
+            "method": "GET",
+            "url": "{{baseUrl}}/settings"
+          }
+        },
+        {
+          "name": "Update Settings",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"schoolName\": \"Kindervale School\",\n  \"academicYear\": \"2026-2027\",\n  \"timezone\": \"America/Los_Angeles\"\n}"
+            },
+            "url": "{{baseUrl}}/settings"
+          }
+        }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,23 @@
+# Logs
+*.log
+
+# Dependency Directories
+node_modules
+package-lock.json
+
+# Drizzle
+drizzle
+
+# Environment Variable Files
+.env
+.env.*
+!.env.example
+
+# Build
+dist
+
+# Storage
+uploads
+
+# Developer Directories
+.Extras
