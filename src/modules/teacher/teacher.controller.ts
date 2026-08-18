@@ -3,6 +3,7 @@ import { ParamDto } from "common/common.dto";
 import { AuthGuard } from "middleware/auth.guard";
 import { RequirePermission } from "middleware/permission.decorator";
 import { PermissionGuard } from "middleware/permission.guard";
+import { User } from "middleware/user.decorator";
 import { CreateTeacherDto, TeacherListQueryDto, UpdateTeacherDto } from "modules/teacher/teacher.dto";
 import { TeacherService } from "modules/teacher/teacher.service";
 
@@ -23,6 +24,18 @@ export class TeacherController {
   async getTeachers(@Query() query: TeacherListQueryDto) {
     const teachers = await this.teacherService.getTeachers(query);
     return { data: teachers };
+  }
+
+  @Get("me")
+  async getMyTeacherProfile(@User("userId") userId: string) {
+    const teacher = await this.teacherService.getTeacherByUserId(userId);
+    return { data: teacher };
+  }
+
+  @Patch("me")
+  async updateMyTeacherProfile(@User("userId") userId: string, @Body() dto: UpdateTeacherDto) {
+    const teacher = await this.teacherService.updateTeacherByUserId(userId, dto);
+    return { data: teacher };
   }
 
   @RequirePermission("teachers", "READ")

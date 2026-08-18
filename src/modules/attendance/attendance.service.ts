@@ -14,10 +14,11 @@ export class AttendanceService {
   constructor(private readonly databaseService: DatabaseService) {}
 
   async createAttendance(dto: CreateAttendanceDto, markedBy?: string): Promise<Attendance> {
+    const date = this.normalizeDate(dto.date);
     await this.validateRelations(dto.studentId, dto.classId);
-    await this.ensureAttendanceAvailable(dto.studentId, dto.date);
+    await this.ensureAttendanceAvailable(dto.studentId, date);
 
-    const [attendance] = await this.databaseService.db.insert(attendanceTable).values({ ...dto, markedBy }).returning();
+    const [attendance] = await this.databaseService.db.insert(attendanceTable).values({ ...dto, date, markedBy }).returning();
     if (!attendance) throw new ConflictException("Failed to create attendance");
 
     await this.recalculateStudentAttendance(dto.studentId);
@@ -28,14 +29,17 @@ export class AttendanceService {
     if (dto.classId) await this.validateClass(dto.classId);
 
     const records: Attendance[] = [];
-    for (const record of dto.records) {
+    const date = this.normalizeDate(dto.date);
+    const uniqueRecords = Array.from(new Map(dto.records.map((record) => [record.studentId, record])).values());
+    for (const record of uniqueRecords) {
       await this.validateRelations(record.studentId, dto.classId);
 
-      const [existing] = await this.databaseService.db
+      const existingRecords = await this.databaseService.db
         .select({ id: attendanceTable.id })
         .from(attendanceTable)
-        .where(and(eq(attendanceTable.studentId, record.studentId), eq(attendanceTable.date, dto.date)))
-        .limit(1);
+        .where(and(eq(attendanceTable.studentId, record.studentId), eq(attendanceTable.date, date)))
+        .orderBy(desc(attendanceTable.updatedAt));
+      const [existing, ...duplicates] = existingRecords;
 
       if (existing) {
         const [attendance] = await this.databaseService.db
@@ -44,10 +48,13 @@ export class AttendanceService {
           .where(eq(attendanceTable.id, existing.id))
           .returning();
         records.push(attendance);
+        for (const duplicate of duplicates) {
+          await this.databaseService.db.delete(attendanceTable).where(eq(attendanceTable.id, duplicate.id));
+        }
       } else {
         const [attendance] = await this.databaseService.db
           .insert(attendanceTable)
-          .values({ studentId: record.studentId, classId: dto.classId, date: dto.date, status: record.status, remarks: record.remarks, markedBy })
+          .values({ studentId: record.studentId, classId: dto.classId, date, status: record.status, remarks: record.remarks, markedBy })
           .returning();
         records.push(attendance);
       }
@@ -86,11 +93,12 @@ export class AttendanceService {
   async updateAttendance(id: string, dto: UpdateAttendanceDto, markedBy?: string): Promise<Attendance> {
     const current = await this.getAttendanceRecord(id);
     if (dto.classId) await this.validateClass(dto.classId);
-    if (dto.date) await this.ensureAttendanceAvailable(current.studentId, dto.date, id);
+    const normalizedDto = dto.date ? { ...dto, date: this.normalizeDate(dto.date) } : dto;
+    if (normalizedDto.date) await this.ensureAttendanceAvailable(current.studentId, normalizedDto.date, id);
 
     const [attendance] = await this.databaseService.db
       .update(attendanceTable)
-      .set({ ...dto, markedBy, updatedAt: new Date() })
+      .set({ ...normalizedDto, markedBy, updatedAt: new Date() })
       .where(eq(attendanceTable.id, id))
       .returning();
 
@@ -127,6 +135,10 @@ export class AttendanceService {
 
     const [attendance] = await this.databaseService.db.select({ id: attendanceTable.id }).from(attendanceTable).where(where).limit(1);
     if (attendance) throw new ConflictException("Attendance already exists for this student and date");
+  }
+
+  private normalizeDate(date: string) {
+    return date.slice(0, 10);
   }
 
   private async recalculateStudentAttendance(studentId: string) {

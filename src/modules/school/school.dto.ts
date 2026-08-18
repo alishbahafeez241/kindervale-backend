@@ -157,6 +157,9 @@ export class CreateTimetableDto {
 export class UpdateTimetableDto extends PartialType(CreateTimetableDto) {}
 
 export class CreateDocumentDto {
+  @IsOptional()
+  file?: unknown;
+
   @IsString()
   @Trim()
   title: string;
@@ -170,9 +173,10 @@ export class CreateDocumentDto {
   @IsEnum(documentTypeEnum.enumValues)
   type?: DocumentType;
 
+  @IsOptional()
   @IsString()
   @Trim()
-  fileUrl: string;
+  fileUrl?: string;
 
   @IsOptional()
   @IsEnum(notificationAudienceEnum.enumValues)
@@ -182,14 +186,34 @@ export class CreateDocumentDto {
   @IsString()
   @Trim()
   studentId?: string;
+
+  @IsOptional()
+  @IsString()
+  @Trim()
+  activity?: string;
+
+  @IsOptional()
+  @IsString()
+  @Trim()
+  caption?: string;
+
+  @IsOptional()
+  @IsString()
+  @Trim()
+  classId?: string;
+
+  @IsOptional()
+  @IsDateString()
+  expiresAt?: string;
 }
 
 export class UpdateDocumentDto extends PartialType(CreateDocumentDto) {}
 
 export class CreateLeaveRequestDto {
+  @IsOptional()
   @IsString()
   @Trim()
-  userId: string;
+  userId?: string;
 
   @IsOptional()
   @IsString()
@@ -215,6 +239,10 @@ export class CreateLeaveRequestDto {
   @IsString()
   @Trim()
   reason: string;
+
+  @IsOptional()
+  @IsEnum(["PENDING", "APPROVED", "REJECTED", "CANCELLED"])
+  status?: LeaveStatus;
 }
 
 export class UpdateLeaveRequestDto extends PartialType(CreateLeaveRequestDto) {}

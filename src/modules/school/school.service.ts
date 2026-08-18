@@ -1,9 +1,16 @@
-import { ConflictException, Injectable, NotFoundException } from "@nestjs/common";
-import { eq } from "drizzle-orm";
+import { BadRequestException, ConflictException, Injectable, NotFoundException } from "@nestjs/common";
+import { and, eq, type SQL } from "drizzle-orm";
 import { ParamDto } from "common/common.dto";
+import { createId } from "@paralleldrive/cuid2";
+import { type Response } from "express";
+import { createReadStream } from "node:fs";
+import { mkdir, writeFile } from "node:fs/promises";
+import { basename, extname, join } from "node:path";
 import {
   calendarEventsTable,
+  attendanceTable,
   backupsTable,
+  classesTable,
   daycareReportsTable,
   daycareResourcesTable,
   documentsTable,
@@ -194,15 +201,59 @@ export class SchoolService {
   }
 
   createDocument(dto: CreateDocumentDto, uploadedBy?: string) {
-    return this.insert(documentsTable, { ...dto, uploadedBy }, "document");
+    if (!dto.fileUrl) throw new BadRequestException("File URL is required");
+    return this.insert(documentsTable, { ...dto, fileUrl: dto.fileUrl, uploadedBy }, "document");
   }
 
-  getDocuments() {
-    return this.databaseService.db.select().from(documentsTable);
+  async uploadDocument(file: any, dto: CreateDocumentDto, uploadedBy?: string) {
+    if (!file?.buffer || !file?.originalname) throw new BadRequestException("File is required");
+
+    const fileId = createId();
+    const originalName = basename(String(file.originalname));
+    const filename = `${fileId}${extname(originalName)}`;
+    const storageDir = join(process.cwd(), "storage", "documents");
+    await mkdir(storageDir, { recursive: true });
+    await writeFile(join(storageDir, filename), file.buffer);
+
+    const metadata = {
+      originalName,
+      mimeType: file.mimetype || "application/octet-stream",
+      size: file.size,
+      activity: (dto as any).activity,
+      caption: (dto as any).caption,
+      classId: (dto as any).classId,
+      expiresAt: (dto as any).expiresAt
+    };
+
+    return this.createDocument(
+      {
+        ...dto,
+        title: dto.title || originalName,
+        fileUrl: `/storage/documents/${filename}`,
+        description: JSON.stringify(metadata)
+      },
+      uploadedBy
+    );
+  }
+
+  getDocuments(query: { type?: string; uploadedBy?: string } = {}) {
+    const conditions: SQL[] = [];
+    if (query.type) conditions.push(eq(documentsTable.type, query.type as any));
+    if (query.uploadedBy) conditions.push(eq(documentsTable.uploadedBy, query.uploadedBy));
+    return this.databaseService.db.select().from(documentsTable).where(conditions.length ? and(...conditions) : undefined);
   }
 
   getDocument(id: string) {
     return this.findOne(documentsTable, id, "Document");
+  }
+
+  async streamDocument(id: string, response: Response) {
+    const document = await this.getDocument(id);
+    const metadata = this.parseDocumentMetadata(document.description);
+    const filePath = join(process.cwd(), document.fileUrl.replace(/^\/?storage[\\/]/, "storage/"));
+    response.setHeader("Content-Type", metadata.mimeType || "application/octet-stream");
+    response.setHeader("Content-Disposition", `inline; filename="${metadata.originalName || document.title}"`);
+    createReadStream(filePath).pipe(response);
   }
 
   updateDocument(id: string, dto: UpdateDocumentDto) {
@@ -213,12 +264,41 @@ export class SchoolService {
     return this.delete(documentsTable, id, "Document");
   }
 
-  createLeaveRequest(dto: CreateLeaveRequestDto) {
-    return this.insert(leaveRequestsTable, dto, "leave request");
+  private parseDocumentMetadata(description?: string | null): Record<string, any> {
+    if (!description) return {};
+    try {
+      return JSON.parse(description);
+    } catch {
+      return {};
+    }
   }
 
-  getLeaveRequests() {
-    return this.databaseService.db
+  async createLeaveRequest(dto: CreateLeaveRequestDto, role?: string) {
+    if (!dto.userId) {
+      throw new BadRequestException("Authenticated user is required to create a leave request");
+    }
+    const normalizedRole = role?.toUpperCase();
+    const isAdminCreated = normalizedRole === "ADMIN" || normalizedRole === "DAYCAREADMIN" || normalizedRole === "PRINCIPAL";
+    const status = isAdminCreated ? dto.status ?? "PENDING" : "PENDING";
+    const leave = await this.insert(
+      leaveRequestsTable,
+      {
+        ...dto,
+        fromDate: dto.fromDate.slice(0, 10),
+        toDate: dto.toDate.slice(0, 10),
+        status
+      },
+      "leave request"
+    );
+    if (status === "APPROVED") {
+      await this.applyApprovedStudentLeaveSideEffects(leave, dto.userId);
+    }
+    return leave;
+  }
+
+  getLeaveRequests(filter?: { userId?: string; role?: string }) {
+    const role = filter?.role?.toUpperCase();
+    const query = this.databaseService.db
       .select({
         id: leaveRequestsTable.id,
         userId: leaveRequestsTable.userId,
@@ -241,7 +321,14 @@ export class SchoolService {
       })
       .from(leaveRequestsTable)
       .leftJoin(usersTable, eq(leaveRequestsTable.userId, usersTable.id))
-      .leftJoin(studentsTable, eq(leaveRequestsTable.studentId, studentsTable.id));
+      .leftJoin(studentsTable, eq(leaveRequestsTable.studentId, studentsTable.id))
+      .$dynamic();
+
+    if (role === "TEACHER" && filter?.userId) {
+      return query.where(eq(leaveRequestsTable.userId, filter.userId));
+    }
+
+    return query;
   }
 
   getLeaveRequest(id: string) {
@@ -252,8 +339,15 @@ export class SchoolService {
     return this.update(leaveRequestsTable, id, dto, "Leave request");
   }
 
-  reviewLeaveRequest(id: string, dto: ReviewLeaveRequestDto, reviewedBy?: string) {
-    return this.update(leaveRequestsTable, id, { ...dto, reviewedBy, reviewedAt: new Date() }, "Leave request");
+  async reviewLeaveRequest(id: string, dto: ReviewLeaveRequestDto, reviewedBy?: string) {
+    const current = await this.getLeaveRequest(id);
+    const leave = await this.update(leaveRequestsTable, id, { ...dto, reviewedBy, reviewedAt: new Date() }, "Leave request");
+    if (dto.status === "APPROVED" && current.status !== "APPROVED") {
+      await this.applyApprovedStudentLeaveSideEffects(leave, reviewedBy);
+    } else if (dto.status !== "APPROVED" && current.status === "APPROVED") {
+      await this.clearApprovedStudentLeaveSideEffects(leave);
+    }
+    return leave;
   }
 
   deleteLeaveRequest(id: string) {
@@ -430,5 +524,101 @@ export class SchoolService {
     const result = await this.databaseService.db.delete(table).where(eq(table.id, id)).returning({ id: table.id });
     if (!result.length) throw new NotFoundException(`${label} not found`);
     return { deleted: true };
+  }
+
+  private async applyApprovedStudentLeaveSideEffects(leave: any, actorUserId?: string) {
+    if (!leave?.studentId) return;
+
+    const [student] = await this.databaseService.db
+      .select()
+      .from(studentsTable)
+      .where(eq(studentsTable.id, leave.studentId))
+      .limit(1);
+    if (!student) throw new NotFoundException("Student not found");
+
+    const [classRoom] = await this.databaseService.db
+      .select()
+      .from(classesTable)
+      .where(eq(classesTable.name, student.className))
+      .limit(1);
+
+    const [teacher] = await this.databaseService.db
+      .select({
+        id: teachersTable.id,
+        userId: teachersTable.userId,
+        className: teachersTable.className,
+        name: usersTable.name
+      })
+      .from(teachersTable)
+      .leftJoin(usersTable, eq(teachersTable.userId, usersTable.id))
+      .where(eq(teachersTable.className, student.className))
+      .limit(1);
+
+    const dates = this.inclusiveDateRange(leave.fromDate, leave.toDate || leave.fromDate);
+    for (const date of dates) {
+      const [existing] = await this.databaseService.db
+        .select({ id: attendanceTable.id })
+        .from(attendanceTable)
+        .where(and(eq(attendanceTable.studentId, student.id), eq(attendanceTable.date, date)))
+        .limit(1);
+
+      const attendanceValue = {
+        classId: classRoom?.id ?? null,
+        status: "EXCUSED" as const,
+        remarks: `Approved leave: ${leave.type || "Leave"}`,
+        markedBy: actorUserId,
+        updatedAt: new Date()
+      };
+
+      if (existing) {
+        await this.databaseService.db.update(attendanceTable).set(attendanceValue).where(eq(attendanceTable.id, existing.id));
+      } else {
+        await this.databaseService.db.insert(attendanceTable).values({
+          studentId: student.id,
+          classId: classRoom?.id ?? null,
+          date,
+          status: "EXCUSED",
+          remarks: attendanceValue.remarks,
+          markedBy: actorUserId
+        });
+      }
+    }
+
+    await this.databaseService.db.insert(notificationsTable).values({
+      title: "Student leave approved",
+      body: `${student.name}'s leave from ${leave.fromDate} to ${leave.toDate || leave.fromDate} was approved.${teacher?.userId ? ` Teacher user: ${teacher.userId}.` : ""}`,
+      date: new Date().toISOString().slice(0, 10),
+      audience: "TEACHER"
+    });
+  }
+
+  private async clearApprovedStudentLeaveSideEffects(leave: any) {
+    if (!leave?.studentId) return;
+
+    const dates = this.inclusiveDateRange(leave.fromDate, leave.toDate || leave.fromDate);
+    for (const date of dates) {
+      await this.databaseService.db
+        .delete(attendanceTable)
+        .where(
+          and(
+            eq(attendanceTable.studentId, leave.studentId),
+            eq(attendanceTable.date, date),
+            eq(attendanceTable.status, "EXCUSED")
+          )
+        );
+    }
+  }
+
+  private inclusiveDateRange(fromDate: string, toDate: string) {
+    const dates: string[] = [];
+    const start = new Date(`${fromDate}T00:00:00`);
+    const end = new Date(`${toDate}T00:00:00`);
+    if (Number.isNaN(start.getTime()) || Number.isNaN(end.getTime()) || end < start) {
+      throw new BadRequestException("Invalid leave date range");
+    }
+    for (const date = new Date(start); date <= end; date.setDate(date.getDate() + 1)) {
+      dates.push(date.toISOString().slice(0, 10));
+    }
+    return dates;
   }
 }

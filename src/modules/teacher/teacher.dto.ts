@@ -35,6 +35,11 @@ export class UpdateTeacherDto {
   userId?: string;
 
   @IsOptional()
+  @IsString({ message: "Name must be a string" })
+  @Trim()
+  name?: string;
+
+  @IsOptional()
   @IsString({ message: "Phone must be a string" })
   @Trim()
   phone?: string;

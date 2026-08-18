@@ -1,7 +1,7 @@
 import "dotenv/config";
 import { createId } from "@paralleldrive/cuid2";
 import { hash } from "bcrypt";
-import { eq } from "drizzle-orm";
+import { eq, or } from "drizzle-orm";
 import { drizzle } from "drizzle-orm/node-postgres";
 import { Pool } from "pg";
 import adminsTable from "models/admins";
@@ -63,7 +63,11 @@ async function main() {
 
   try {
     for (const seedUser of seedUsers) {
-      const [existingUser] = await db.select().from(usersTable).where(eq(usersTable.email, seedUser.email)).limit(1);
+      const [existingUser] = await db
+        .select()
+        .from(usersTable)
+        .where(or(eq(usersTable.email, seedUser.email), eq(usersTable.username, seedUser.username)))
+        .limit(1);
       const passwordHash = await hash(seedUser.password, 10);
 
       const [user] = existingUser

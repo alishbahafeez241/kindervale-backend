@@ -113,10 +113,43 @@ export class TeacherService {
     return teacher as TeacherWithUser;
   }
 
-  async updateTeacher(id: string, dto: UpdateTeacherDto): Promise<Teacher> {
+  async getTeacherByUserId(userId: string): Promise<TeacherWithUser> {
+    const [teacher] = await this.databaseService.db
+      .select({
+        id: teachersTable.id,
+        userId: teachersTable.userId,
+        phone: teachersTable.phone,
+        subject: teachersTable.subject,
+        className: teachersTable.className,
+        attendance: teachersTable.attendance,
+        createdAt: teachersTable.createdAt,
+        updatedAt: teachersTable.updatedAt,
+        name: usersTable.name,
+        email: usersTable.email
+      })
+      .from(teachersTable)
+      .leftJoin(usersTable, eq(teachersTable.userId, usersTable.id))
+      .where(eq(teachersTable.userId, userId))
+      .limit(1);
+
+    if (!teacher) {
+      throw new NotFoundException("Teacher not found");
+    }
+
+    return teacher as TeacherWithUser;
+  }
+
+  async updateTeacherByUserId(userId: string, dto: UpdateTeacherDto): Promise<TeacherWithUser> {
+    const teacher = await this.getTeacherByUserId(userId);
+    return this.updateTeacher(teacher.id, dto);
+  }
+
+  async updateTeacher(id: string, dto: UpdateTeacherDto): Promise<TeacherWithUser> {
+    const { name, ...teacherFields } = dto;
+
     const [teacher] = await this.databaseService.db
       .update(teachersTable)
-      .set({ ...dto, updatedAt: new Date() })
+      .set({ ...teacherFields, updatedAt: new Date() })
       .where(eq(teachersTable.id, id))
       .returning();
 
@@ -124,7 +157,36 @@ export class TeacherService {
       throw new NotFoundException("Teacher not found");
     }
 
-    return teacher;
+    if (name !== undefined) {
+      await this.databaseService.db
+        .update(usersTable)
+        .set({ name, updatedAt: new Date() })
+        .where(eq(usersTable.id, teacher.userId));
+    }
+
+    const [updatedTeacher] = await this.databaseService.db
+      .select({
+        id: teachersTable.id,
+        userId: teachersTable.userId,
+        phone: teachersTable.phone,
+        subject: teachersTable.subject,
+        className: teachersTable.className,
+        attendance: teachersTable.attendance,
+        createdAt: teachersTable.createdAt,
+        updatedAt: teachersTable.updatedAt,
+        name: usersTable.name,
+        email: usersTable.email
+      })
+      .from(teachersTable)
+      .leftJoin(usersTable, eq(teachersTable.userId, usersTable.id))
+      .where(eq(teachersTable.id, id))
+      .limit(1);
+
+    if (!updatedTeacher) {
+      throw new NotFoundException("Teacher not found after update");
+    }
+
+    return updatedTeacher as TeacherWithUser;
   }
 
   async deleteTeacher(id: string): Promise<void> {
@@ -156,5 +218,4 @@ export class TeacherService {
     return conditions.length ? and(...conditions) : undefined;
   }
 }
-
 

@@ -5,6 +5,7 @@ import { HttpExceptionFilter } from "common/http-exception.filter";
 import { ResponseInterceptor } from "common/response.interceptor";
 import { type NextFunction, type Request, type Response } from "express";
 import helmet from "helmet";
+import { join } from "node:path";
 import { AppModule } from "src/app.module";
 
 const apiRoots = [
@@ -45,6 +46,7 @@ const apiRoots = [
   const app: NestExpressApplication = await NestFactory.create<NestExpressApplication>(AppModule);
 
   app.setGlobalPrefix("api");
+  app.useStaticAssets(join(process.cwd(), "storage"), { prefix: "/storage/" });
   app.use((request: Request, _response: Response, next: NextFunction) => {
     const root = request.path.split("/").filter(Boolean)[0];
     if (root && apiRoots.includes(root)) {

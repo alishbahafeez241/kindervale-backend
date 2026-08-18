@@ -1,5 +1,7 @@
-import { Body, Controller, Delete, Get, Param, Patch, Post, UseGuards } from "@nestjs/common";
+import { Body, Controller, Delete, Get, Param, Patch, Post, Query, Res, UploadedFile, UseGuards, UseInterceptors } from "@nestjs/common";
+import { FileInterceptor } from "@nestjs/platform-express";
 import { ParamDto } from "common/common.dto";
+import { type Response } from "express";
 import { AuthGuard } from "middleware/auth.guard";
 import { RequirePermission } from "middleware/permission.decorator";
 import { PermissionGuard } from "middleware/permission.guard";
@@ -215,16 +217,29 @@ export class SchoolController {
     return { data: await this.schoolService.createDocument(dto, userId) };
   }
 
+  @RequirePermission("documents", "CREATE")
+  @Post("documents/upload")
+  @UseInterceptors(FileInterceptor("file"))
+  async uploadDocument(@UploadedFile() file: any, @Body() dto: CreateDocumentDto, @User("userId") userId: string) {
+    return { data: await this.schoolService.uploadDocument(file, dto, userId) };
+  }
+
   @RequirePermission("documents", "READ")
   @Get("documents")
-  async getDocuments() {
-    return { data: await this.schoolService.getDocuments() };
+  async getDocuments(@Query("type") type?: string, @Query("uploadedBy") uploadedBy?: string) {
+    return { data: await this.schoolService.getDocuments({ type, uploadedBy }) };
   }
 
   @RequirePermission("documents", "READ")
   @Get("documents/:id")
   async getDocument(@Param() { id }: ParamDto) {
     return { data: await this.schoolService.getDocument(id) };
+  }
+
+  @RequirePermission("documents", "READ")
+  @Get("documents/:id/download")
+  async downloadDocument(@Param() { id }: ParamDto, @Res() response: Response) {
+    await this.schoolService.streamDocument(id, response);
   }
 
   @RequirePermission("documents", "UPDATE")
@@ -242,14 +257,14 @@ export class SchoolController {
 
   @RequirePermission("documents", "CREATE")
   @Post("leave-requests")
-  async createLeaveRequest(@Body() dto: CreateLeaveRequestDto) {
-    return { data: await this.schoolService.createLeaveRequest(dto) };
+  async createLeaveRequest(@Body() dto: CreateLeaveRequestDto, @User("userId") userId: string, @User("role") role: string) {
+    return { data: await this.schoolService.createLeaveRequest({ ...dto, userId }, role) };
   }
 
   @RequirePermission("documents", "READ")
   @Get("leave-requests")
-  async getLeaveRequests() {
-    return { data: await this.schoolService.getLeaveRequests() };
+  async getLeaveRequests(@User("userId") userId: string, @User("role") role: string) {
+    return { data: await this.schoolService.getLeaveRequests({ userId, role }) };
   }
 
   @RequirePermission("documents", "READ")
